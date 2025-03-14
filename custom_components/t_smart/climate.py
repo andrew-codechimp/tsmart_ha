@@ -77,7 +77,7 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
 
     async def async_update(self):
         """Update the state of the climate entity."""
-        await self._tsmart._async_get_status()
+        await self._tsmart.async_get_status()
 
     @property
     def hvac_mode(self):
