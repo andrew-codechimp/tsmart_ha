@@ -11,11 +11,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
+    ATTR_HVAC_MODE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
+    ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,12 +96,25 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
         return HVACAction.OFF
 
     async def async_set_hvac_mode(self, hvac_mode):
-        """Set the current mode."""
-        await self._tsmart.async_control_set(
-            hvac_mode == HVACMode.HEAT,
-            PRESET_MAP[self.preset_mode],
-            self.target_temperature,
-        )
+        """Set the hvac mode."""
+
+        if hvac_mode not in self._attr_hvac_modes:
+            _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
+            return
+
+        if hvac_mode == HVACMode.HEAT:
+            await self._tsmart.async_control_set(
+                hvac_mode == HVACMode.HEAT,
+                PRESET_MAP[self.preset_mode],
+                self.target_temperature,
+            )
+        elif hvac_mode == HVACMode.OFF:
+            await self._tsmart.async_control_set(
+                False,
+                PRESET_MAP[self.preset_mode],
+                self.target_temperature,
+            )
+
         await self.coordinator.async_request_refresh()
 
     @property
@@ -118,12 +133,23 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
         """Get the target temperature."""
         return self._tsmart.setpoint
 
-    async def async_set_temperature(self, temperature, **kwargs):
-        """Set the temperature."""
-        await self._tsmart.async_control_set(
-            self.hvac_mode == HVACMode.HEAT, PRESET_MAP[self.preset_mode], temperature
-        )
-        await self.coordinator.async_request_refresh()
+    async def async_set_temperature(self, **kwargs):
+        """Set the target temperature."""
+        if temperature := kwargs.get(ATTR_TEMPERATURE):
+            self._attr_target_temperature = temperature
+
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
+
+        if temperature:
+            await self._tsmart.async_control_set(
+                hvac_mode == HVACMode.HEAT,
+                PRESET_MAP[self.preset_mode],
+                temperature,
+            )
+            await self.coordinator.async_request_refresh()
+
+        # Write updated temperature to HA state to avoid flapping
+        self.async_write_ha_state()
 
     @property
     def preset_mode(self):
