@@ -1,24 +1,23 @@
 """DataUpdateCoordinator for thermostats."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import logging
+from datetime import timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from datetime import timedelta
-
-from .tsmart import TSmart
 from .const import (
-    DOMAIN,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_TEMPERATURE_MODE,
+    DOMAIN,
     TEMPERATURE_MODE_AVERAGE,
 )
-import logging
+from .tsmart import TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +49,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN}-{self.device.device_id}",
             update_interval=timedelta(seconds=10),
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self):
