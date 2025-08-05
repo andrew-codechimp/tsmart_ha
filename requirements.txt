@@ -1,5 +1,5 @@
 colorlog==6.9.0
 homeassistant==2025.4.0
 pip>=21.0,<25.3
-ruff==0.12.5
+ruff==0.12.7
 asyncio_dgram==2.2.0
