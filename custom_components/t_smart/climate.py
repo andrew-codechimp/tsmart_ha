@@ -69,8 +69,8 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     )
     _attr_preset_modes = list(PRESET_MAP.keys())
     _attr_icon = "mdi:water-boiler"
-    _attr_max_temp = 70
-    _attr_min_temp = 15
+    _attr_max_temp = 75
+    _attr_min_temp = 10
     _attr_target_temperature_step = 5
 
     # Inherit name from DeviceInfo, which is obtained from actual device
