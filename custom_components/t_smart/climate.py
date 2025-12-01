@@ -1,5 +1,6 @@
 """Climate platform for t_smart."""
 
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -50,6 +51,8 @@ PRESET_MAP = {
     PRESET_AWAY: TSmartMode.TRAVEL,
     PRESET_BOOST: TSmartMode.BOOST,
 }
+
+AFTER_SET_SLEEP = 2  # Seconds
 
 
 class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
@@ -115,6 +118,7 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
                 self.target_temperature,
             )
 
+        await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -146,6 +150,7 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
                 PRESET_MAP[self.preset_mode],
                 temperature,
             )
+            await asyncio.sleep(AFTER_SET_SLEEP)
             await self.coordinator.async_request_refresh()
 
         # Write updated temperature to HA state to avoid flapping
@@ -163,6 +168,7 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
             PRESET_MAP[preset_mode],
             self.target_temperature,
         )
+        await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
 
     @property
