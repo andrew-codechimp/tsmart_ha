@@ -1,10 +1,10 @@
-import struct
-import logging
 import socket
+import struct
 import asyncio
-import asyncio_dgram
-
+import logging
 from enum import IntEnum
+
+import asyncio_dgram
 
 UDP_PORT = 1337
 
@@ -12,6 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TSmartMode(IntEnum):
+    """Operating modes for TSmart devices."""
+
     MANUAL = 0x00
     ECO = 0x01
     SMART = 0x02
@@ -23,7 +25,6 @@ class TSmartMode(IntEnum):
 
 
 class TSmart:
-
     def __init__(self, ip, device_id=None, name=None):
         self.ip = ip
         self.device_id = device_id

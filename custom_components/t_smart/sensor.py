@@ -2,28 +2,28 @@
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorStateClass,
+    SensorDeviceClass,
+)
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_TEMPERATURE_AVERAGE,
-    ATTR_TEMPERATURE_HIGH,
-    ATTR_TEMPERATURE_LOW,
-    COORDINATORS,
     DOMAIN,
-    TEMPERATURE_MODE_HIGH,
+    COORDINATORS,
+    ATTR_TEMPERATURE_LOW,
     TEMPERATURE_MODE_LOW,
+    ATTR_TEMPERATURE_HIGH,
+    TEMPERATURE_MODE_HIGH,
+    ATTR_TEMPERATURE_AVERAGE,
 )
 from .entity import TSmartCoordinatorEntity
 

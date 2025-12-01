@@ -3,37 +3,37 @@
 import logging
 from datetime import timedelta
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_BOOST,
-    PRESET_ECO,
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-    ATTR_HVAC_MODE,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     UnitOfTemperature,
-    ATTR_TEMPERATURE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.climate import (
+    PRESET_ECO,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    ATTR_HVAC_MODE,
+    HVACMode,
+    HVACAction,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_TEMPERATURE_AVERAGE,
-    ATTR_TEMPERATURE_HIGH,
-    ATTR_TEMPERATURE_LOW,
-    COORDINATORS,
     DOMAIN,
-    PRESET_MANUAL,
+    COORDINATORS,
     PRESET_SMART,
     PRESET_TIMER,
-    TEMPERATURE_MODE_HIGH,
+    PRESET_MANUAL,
+    ATTR_TEMPERATURE_LOW,
     TEMPERATURE_MODE_LOW,
+    ATTR_TEMPERATURE_HIGH,
+    TEMPERATURE_MODE_HIGH,
+    ATTR_TEMPERATURE_AVERAGE,
 )
 from .entity import TSmartCoordinatorEntity
 from .tsmart import TSmartMode

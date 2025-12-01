@@ -17,7 +17,7 @@ jobs:
       - name: "Checkout the repository"
         uses: "actions/checkout@v5"
 
-      - name: "Adjust version number in manifest"
+      - name: "Adjust version number"
         shell: "bash"
         run: |
           yq -i -o json '.version="${{ github.event.release.tag_name }}"' \
@@ -30,6 +30,6 @@ jobs:
           zip t_smart.zip -r ./
 
       - name: "Upload the ZIP file to the release"
-        uses: softprops/action-gh-release@v2.4.1
+        uses: softprops/action-gh-release@v2.4.2
         with:
           files: ${{ github.workspace }}/custom_components/t_smart/t_smart.zip
