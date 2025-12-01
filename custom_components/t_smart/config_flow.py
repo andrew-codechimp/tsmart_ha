@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
-import asyncio
 import copy
+import asyncio
 import logging
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_IP_ADDRESS,
 )
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    DOMAIN,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
-    CONF_TEMPERATURE_MODE,
-    DOMAIN,
-    TEMPERATURE_MODE_AVERAGE,
     TEMPERATURE_MODES,
+    CONF_TEMPERATURE_MODE,
+    TEMPERATURE_MODE_AVERAGE,
 )
 from .tsmart import TSmart
 
@@ -50,7 +51,7 @@ CONFIG_VERSION = 1
 TIMEOUT = 2
 
 
-def _base_schema(discovery_info=None):
+def _base_schema(discovery_info=None) -> vol.Schema:
     """Generate base schema."""
     base_schema = {}
     if discovery_info and CONF_IP_ADDRESS in discovery_info:
@@ -101,7 +102,6 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         devices = await TSmart.async_discover()
 
         for device in devices:
-
             existing_entries = [
                 entry
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
@@ -124,7 +124,7 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # update with suggested values from discovery
             self.data_schema = _base_schema(self.discovery_info)
 
-    async def _validate_input(self, data):
+    async def _validate_input(self, data) -> str | None:
         """Validate the user input allows us to connect.
 
         Abort if device_id already configured.
@@ -140,6 +140,7 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if device.device_id:
             await self.async_set_unique_id(device.device_id)
             self._abort_if_unique_id_configured()
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
