@@ -4,7 +4,6 @@ MIN_HA_VERSION = "2025.4"
 
 DOMAIN = "t_smart"
 DATA_DISCOVERY_SERVICE = "tsmart_discovery"
-COORDINATORS = "coordinators"
 
 PRESET_MANUAL = "Manual"
 PRESET_SMART = "Smart"
