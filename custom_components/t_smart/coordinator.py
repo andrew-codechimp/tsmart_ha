@@ -4,21 +4,21 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
-    UpdateFailed,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
-    DOMAIN,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_TEMPERATURE_MODE,
+    DOMAIN,
     TEMPERATURE_MODE_AVERAGE,
 )
 from .tsmart import TSmart
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 10  # Timeout in seconds for device communication
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class TSmartCoordinator(DataUpdateCoordinator):
     """Manages polling for state changes from the device."""
 
     device: TSmart

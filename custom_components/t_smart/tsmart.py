@@ -1,7 +1,7 @@
-import socket
-import struct
 import asyncio
 import logging
+import socket
+import struct
 from enum import IntEnum
 
 import asyncio_dgram

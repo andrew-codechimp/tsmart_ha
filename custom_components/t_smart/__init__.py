@@ -2,23 +2,21 @@
 
 from __future__ import annotations
 
+import logging
+
 from awesomeversion.awesomeversion import AwesomeVersion
 
-from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.const import Platform
+from homeassistant.const import (
+    Platform,
+    __version__ as HA_VERSION,  # noqa: N812
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import ConfigEntryNotReady
 
-from .const import (
-    DOMAIN,
-    COORDINATORS,
-    MIN_HA_VERSION,
-)
-from .coordinator import DeviceDataUpdateCoordinator
-
-import logging
+from .common import TSmartConfigEntry
+from .const import MIN_HA_VERSION
+from .coordinator import TSmartCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,23 +35,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.critical(msg)
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][COORDINATORS] = {}
-
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bool:
     """Set up T-Smart Thermostat from a config entry."""
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    coordinator = DeviceDataUpdateCoordinator(hass=hass, config_entry=entry)
+    coordinator = TSmartCoordinator(hass=hass, config_entry=entry)
 
     # Initialize device configuration before first refresh
     await coordinator.async_initialize()
+    if coordinator.device.request_successful is False:
+        raise ConfigEntryNotReady(f"Unable to connect to {coordinator.device.ip}")
 
-    hass.data[DOMAIN][COORDINATORS][entry.entry_id] = coordinator
+    entry.runtime_data.coordinator = coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -64,14 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: TSmartConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN][COORDINATORS].pop(entry.entry_id, None)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,22 +1,16 @@
 """Binary Sensor platform for t_smart."""
 
-from datetime import timedelta
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COORDINATORS,
-    DOMAIN,
-)
+from .common import TSmartConfigEntry
 from .entity import TSmartCoordinatorEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 
 class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
@@ -36,9 +30,9 @@ class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TSmartConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
-    coordinator = hass.data[DOMAIN][COORDINATORS][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities([TSmartBinarySensorEntity(coordinator)])

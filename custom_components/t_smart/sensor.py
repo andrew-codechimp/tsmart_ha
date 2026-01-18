@@ -1,33 +1,29 @@
 """Sensor platform for t_smart."""
 
-from datetime import timedelta
-
-from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorStateClass,
-    SensorDeviceClass,
-)
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.temperature import display_temp as show_temp
 
+from .common import TSmartConfigEntry
 from .const import (
-    DOMAIN,
-    COORDINATORS,
-    ATTR_TEMPERATURE_LOW,
-    TEMPERATURE_MODE_LOW,
-    ATTR_TEMPERATURE_HIGH,
-    TEMPERATURE_MODE_HIGH,
     ATTR_TEMPERATURE_AVERAGE,
+    ATTR_TEMPERATURE_HIGH,
+    ATTR_TEMPERATURE_LOW,
+    TEMPERATURE_MODE_HIGH,
+    TEMPERATURE_MODE_LOW,
 )
 from .entity import TSmartCoordinatorEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 
 class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
@@ -93,9 +89,9 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TSmartConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][COORDINATORS][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities([TSmartSensorEntity(coordinator)])

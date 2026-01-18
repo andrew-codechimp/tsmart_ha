@@ -6,13 +6,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DOMAIN,
 )
-from .coordinator import DeviceDataUpdateCoordinator
+from .coordinator import TSmartCoordinator
 
 
-class TSmartCoordinatorEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
+class TSmartCoordinatorEntity(CoordinatorEntity[TSmartCoordinator]):
     """Base entity."""
 
-    def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: TSmartCoordinator) -> None:
         """Init the base entity."""
         super().__init__(coordinator)
         self._tsmart = coordinator.device
