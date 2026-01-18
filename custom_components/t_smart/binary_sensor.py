@@ -13,6 +13,16 @@ from .entity import TSmartCoordinatorEntity
 PARALLEL_UPDATES = 0
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: TSmartConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the binary sensor platform."""
+    coordinator = config_entry.runtime_data.coordinator
+    async_add_entities([TSmartBinarySensorEntity(coordinator)])
+
+
 class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
     """t_smart Binary Sensor class."""
 
@@ -26,13 +36,3 @@ class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
     def is_on(self):
         """Is the relay on."""
         return self._tsmart.relay
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: TSmartConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the binary sensor platform."""
-    coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartBinarySensorEntity(coordinator)])

@@ -26,6 +26,16 @@ from .entity import TSmartCoordinatorEntity
 PARALLEL_UPDATES = 0
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: TSmartConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform."""
+    coordinator = config_entry.runtime_data.coordinator
+    async_add_entities([TSmartSensorEntity(coordinator)])
+
+
 class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
     """t_smart Sensor class."""
 
@@ -85,13 +95,3 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         if super_attrs:
             attrs.update(super_attrs)
         return attrs
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: TSmartConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartSensorEntity(coordinator)])

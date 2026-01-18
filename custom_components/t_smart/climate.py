@@ -52,6 +52,16 @@ PRESET_MAP = {
 AFTER_SET_SLEEP = 2  # Seconds
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: TSmartConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the climate platform."""
+    coordinator = config_entry.runtime_data.coordinator
+    async_add_entities([TSmartClimateEntity(coordinator)])
+
+
 class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     """t_smart Climate class."""
 
@@ -194,13 +204,3 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
         if super_attrs:
             attrs.update(super_attrs)
         return attrs
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: TSmartConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the climate platform."""
-    coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartClimateEntity(coordinator)])
