@@ -8,6 +8,8 @@ This integration supports Tesla T-Smart and other branded water heaters made by 
 
 The integration provides a climate control with preset modes, current temperature sensor, and a binary sensor for the relay.
 
+This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
+
 ## Installation
 
 ⚠️ If you are using the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new.
