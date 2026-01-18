@@ -200,7 +200,7 @@ class TSmart:
         _LOGGER.info("Async get configuration")
         request = struct.pack("=BBBB", 0x21, 0, 0, 0)
 
-        response_struct = struct.Struct("=BBBHL32sB284s")
+        response_struct = struct.Struct("=BBBHL32sBBBBB32s28s32s64s124s")
         response = await self._async_request(request, response_struct)
 
         if response is None:
