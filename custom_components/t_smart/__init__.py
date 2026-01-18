@@ -50,6 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = DeviceDataUpdateCoordinator(hass=hass, config_entry=entry)
 
+    # Initialize device configuration before first refresh
+    await coordinator.async_initialize()
+
     hass.data[DOMAIN][COORDINATORS][entry.entry_id] = coordinator
 
     await coordinator.async_config_entry_first_refresh()

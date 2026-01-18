@@ -29,5 +29,5 @@ class TSmartCoordinatorEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             name=self._tsmart.name,
             manufacturer="Tesla Ltd.",
             model="T-Smart",
-            sw_version=f"{self._tsmart.firmware_version} ({self._tsmart.firmware_name})",
+            sw_version=self._tsmart.firmware_version,
         )

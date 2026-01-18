@@ -227,10 +227,8 @@ class TSmart:
 
         self.device_id = "%4X" % device_id
         self.name = device_name.decode("utf-8").split("\x00")[0]
-        self.firmware_version = (
-            f"{firmware_version_major}.{firmware_version_minor}.{firmware_version_deployment}",
-        )
-        self.firmware_name = (firmware_name.decode("utf-8").split("\x00")[0],)
+        self.firmware_version = f"{firmware_version_major}.{firmware_version_minor}.{firmware_version_deployment}"
+        self.firmware_name = firmware_name.decode("utf-8").split("\x00")[0]
 
         _LOGGER.info("Received configuration from %s" % self.ip)
 
