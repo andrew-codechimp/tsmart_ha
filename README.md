@@ -1,7 +1,12 @@
-[![hacs][hacsbadge]][hacs]
+[![GitHub Release][releases-shield]][releases]
+[![GitHub Activity][commits-shield]][commits]
 [![Downloads][download-latest-shield]](Downloads)
 
 # Tesla T-Smart thermostat Home Assistant integration
+
+This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
+
+The integration provides a climate control with preset modes, current temperature sensor, and a binary sensor for the relay.
 
 ## Installation
 
@@ -61,10 +66,14 @@ This integration works with all EUROICC water heaters.
 - Smart Bandini
 
 ## Acknowlgements
-Thanks to pdw-mb for the [original](https://github.com/pdw-mb/tsmart_ha) version of this but no longer maintains.
+Thanks to pdw-mb for the [original](https://github.com/pdw-mb/tsmart_ha) version of this which is no longer maintained.
 
 <!---->
 
 [hacs]: https://github.com/hacs/integration
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge
 [download-latest-shield]: https://img.shields.io/github/downloads/andrew-codechimp/tsmart_ha/latest/total?style=for-the-badge
+[commits-shield]: https://img.shields.io/github/commit-activity/y/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
+[commits]: https://github.com/andrew-codechimp/tsmart_ha/commits/main
+[releases-shield]: https://img.shields.io/github/release/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
+[releases]: https://github.com/andrew-codechimp/tsmart_ha/releases
