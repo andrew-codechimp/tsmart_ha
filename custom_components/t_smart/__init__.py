@@ -44,16 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     coordinator = TSmartCoordinator(hass=hass, config_entry=entry)
+    entry.runtime_data.coordinator = coordinator
 
-    # Initialize device configuration before first refresh
+    # Get device configuration before first refresh
     await coordinator.async_initialize()
     if coordinator.device.request_successful is False:
         raise ConfigEntryNotReady(f"Unable to connect to {coordinator.device.ip}")
 
-    entry.runtime_data.coordinator = coordinator
-
     await coordinator.async_config_entry_first_refresh()
-
     if coordinator.device.request_successful is False:
         raise ConfigEntryNotReady(f"Unable to connect to {coordinator.device.ip}")
 
