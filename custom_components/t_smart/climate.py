@@ -88,6 +88,11 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     _attr_name = None
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._tsmart.device_id
+
+    @property
     def hvac_mode(self):
         """Get the current mode."""
         return HVACMode.HEAT if self._tsmart.power else HVACMode.OFF

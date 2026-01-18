@@ -46,7 +46,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_VERSION = 1
+CONFIG_VERSION = 2
 
 TIMEOUT = 2
 

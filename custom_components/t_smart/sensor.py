@@ -43,10 +43,13 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_suggested_display_precision = 1
-
-    # Inherit name from DeviceInfo, which is obtained from actual device
     _attr_has_entity_name = True
-    _attr_name = "Current Temperature"
+    _attr_translation_key = "current_temperature"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._tsmart.device_id}_temperature"
 
     @property
     def native_value(self) -> int:

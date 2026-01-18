@@ -27,10 +27,13 @@ class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
     """t_smart Binary Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.POWER
-
-    # Inherit name from DeviceInfo, which is obtained from actual device
     _attr_has_entity_name = True
-    _attr_name = "Relay"
+    _attr_translation_key = "relay"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._tsmart.device_id}_relay"
 
     @property
     def is_on(self):
