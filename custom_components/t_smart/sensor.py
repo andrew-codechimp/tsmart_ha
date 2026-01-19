@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp
 
 from .common import TSmartConfigEntry
 from .const import (
@@ -60,7 +60,7 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         else:
             new_value = self._tsmart.temperature_average
 
-        return show_temp(
+        return display_temp(
             self.hass,
             new_value,
             self._attr_native_unit_of_measurement,
@@ -73,19 +73,19 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
 
         # Temperature related attributes
         attrs = {
-            ATTR_TEMPERATURE_LOW: show_temp(
+            ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
                 self._tsmart.temperature_low,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_HIGH: show_temp(
+            ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
                 self._tsmart.temperature_high,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_AVERAGE: show_temp(
+            ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
                 self._tsmart.temperature_average,
                 self._attr_native_unit_of_measurement,
