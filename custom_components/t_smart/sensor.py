@@ -33,11 +33,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartSensorEntity(coordinator)])
+    async_add_entities(
+        [
+            TSmartTemperatureSensorEntity(coordinator),
+            TSmartStatusSensorEntity(coordinator),
+        ]
+    )
 
 
-class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
-    """t_smart Sensor class."""
+class TSmartTemperatureSensorEntity(TSmartCoordinatorEntity, SensorEntity):
+    """t_smart Temperature Sensor class."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -92,6 +97,42 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
+        }
+
+        super_attrs = super().extra_state_attributes
+        if super_attrs:
+            attrs.update(super_attrs)
+        return attrs
+
+
+class TSmartStatusSensorEntity(TSmartCoordinatorEntity, SensorEntity):
+    """t_smart Status Sensor class."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "status"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._tsmart.device_id}_status"
+
+    @property
+    def native_value(self) -> str:
+        """Return the status of the device."""
+        return "problem" if self._tsmart.error_status else "ok"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, bool] | None:
+        """Return the state attributes of the sensor."""
+        attrs = {
+            "E01 - Broken sensors": self._tsmart.error_e01,
+            "E02 - Overheating": self._tsmart.error_e02,
+            "E03 - Dry heating": self._tsmart.error_e03,
+            "E04 - Serial Comm ST": self._tsmart.error_e04,
+            "E05 - Serial Comm ESP": self._tsmart.error_e05,
+            "W01 - Bad High Sensor": self._tsmart.error_w01,
+            "W02 - Bad Low Sensor": self._tsmart.error_w02,
+            "W03 - Long heating": self._tsmart.error_w03,
         }
 
         super_attrs = super().extra_state_attributes

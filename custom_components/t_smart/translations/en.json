@@ -57,6 +57,13 @@
         "sensor": {
             "current_temperature": {
                 "name": "Current Temperature"
+            },
+            "status": {
+                "name": "Status",
+                "state": {
+                    "ok": "OK",
+                    "problem": "Problem"
+                }
             }
         }
     }

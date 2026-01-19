@@ -29,6 +29,15 @@ class TSmart:
 
     firmware_name: str
     firmware_version: str
+    error_status: bool = False
+    error_e01: bool = False
+    error_e02: bool = False
+    error_e03: bool = False
+    error_e04: bool = False
+    error_w01: bool = False
+    error_w02: bool = False
+    error_w03: bool = False
+    error_e05: bool = False
 
     def __init__(self, ip, device_id=None, name=None):
         self.ip = ip
@@ -73,14 +82,14 @@ class TSmart:
                         continue
 
                     if len(data) != response_struct.size:
-                        _LOGGER.warn(
+                        _LOGGER.warning(
                             "Unexpected packet length (got: %d, expected: %d)"
                             % (len(data), response_struct.size)
                         )
                         continue
 
                     if data[0] == 0:
-                        _LOGGER.warn("Got error response (code %d)" % (data[0]))
+                        _LOGGER.warning("Got error response (code %d)" % (data[0]))
                         continue
 
                     if (
@@ -88,7 +97,7 @@ class TSmart:
                         or data[1] != data[1]
                         or data[2] != data[2]
                     ):
-                        _LOGGER.warn(
+                        _LOGGER.warning(
                             "Unexpected response type (%02X %02X %02X)"
                             % (data[0], data[1], data[2])
                         )
@@ -98,7 +107,7 @@ class TSmart:
                     for b in data[:-1]:
                         t = t ^ b
                     if t ^ 0x55 != data[-1]:
-                        _LOGGER.warn("Received packet checksum failed")
+                        _LOGGER.warning("Received packet checksum failed")
                         continue
 
                     _LOGGER.info("Got response from %s" % remote_addr[0])
@@ -159,18 +168,18 @@ class TSmart:
             try:
                 data, remote_addr = await asyncio.wait_for(stream.recv(), 2)
                 if len(data) != response_struct.size:
-                    _LOGGER.warn(
+                    _LOGGER.warning(
                         "Unexpected packet length (got: %d, expected: %d)"
                         % (len(data), response_struct.size)
                     )
                     continue
 
                 if data[0] == 0:
-                    _LOGGER.warn("Got error response (code %d)" % (data[0]))
+                    _LOGGER.warning("Got error response (code %d)" % (data[0]))
                     continue
 
                 if data[0] != request[0] or data[1] != data[1] or data[2] != data[2]:
-                    _LOGGER.warn(
+                    _LOGGER.warning(
                         "Unexpected response type (%02X %02X %02X)"
                         % (data[0], data[1], data[2])
                     )
@@ -180,7 +189,7 @@ class TSmart:
                 for b in data[:-1]:
                     t = t ^ b
                 if t ^ 0x55 != data[-1]:
-                    _LOGGER.warn("Received packet checksum failed")
+                    _LOGGER.warning("Received packet checksum failed")
 
             except asyncio.exceptions.TimeoutError:
                 continue
@@ -190,7 +199,7 @@ class TSmart:
         stream.close()
 
         if data is None:
-            _LOGGER.warn("Timed-out fetching status from %s" % self.ip)
+            _LOGGER.warning("Timed-out fetching status from %s" % self.ip)
             return None
 
         self.request_successful = True
@@ -264,6 +273,26 @@ class TSmart:
         self.power = bool(power)
         self.mode = TSmartMode(mode)
         self.relay = bool(relay)
+
+        self.error_e01 = (error_buffer[0] >> 7) & 1 == 1
+        self.error_e02 = (error_buffer[2] >> 7) & 1 == 1
+        self.error_e03 = (error_buffer[4] >> 7) & 1 == 1
+        self.error_e04 = (error_buffer[6] >> 7) & 1 == 1
+        self.error_w01 = (error_buffer[8] >> 7) & 1 == 1
+        self.error_w02 = (error_buffer[10] >> 7) & 1 == 1
+        self.error_w03 = (error_buffer[12] >> 7) & 1 == 1
+        self.error_e05 = (error_buffer[14] >> 7) & 1 == 1
+
+        self.error_status = (
+            self.error_e01
+            or self.error_e02
+            or self.error_e03
+            or self.error_e04
+            or self.error_e05
+            or self.error_w01
+            or self.error_w02
+            or self.error_w03
+        )
 
         _LOGGER.info("Received status from %s" % self.ip)
 
