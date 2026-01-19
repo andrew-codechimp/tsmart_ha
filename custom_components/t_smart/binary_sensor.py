@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import TSmartConfigEntry
-from .entity import TSmartCoordinatorEntity
+from .entity import TSmartEntity
 
 PARALLEL_UPDATES = 0
 
@@ -29,11 +29,10 @@ async def async_setup_entry(
     )
 
 
-class TSmartRelayBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
+class TSmartRelayBinarySensorEntity(TSmartEntity, BinarySensorEntity):
     """t_smart Relay Binary Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.POWER
-    _attr_has_entity_name = True
     _attr_translation_key = "relay"
 
     @property
@@ -47,10 +46,9 @@ class TSmartRelayBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity)
         return self._tsmart.relay
 
 
-class TSmartStatusBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
+class TSmartStatusBinarySensorEntity(TSmartEntity, BinarySensorEntity):
     """t_smart Status Binary Sensor class."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "status"
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC

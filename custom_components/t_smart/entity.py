@@ -7,8 +7,10 @@ from .const import DOMAIN
 from .coordinator import TSmartCoordinator
 
 
-class TSmartCoordinatorEntity(CoordinatorEntity[TSmartCoordinator]):
+class TSmartEntity(CoordinatorEntity[TSmartCoordinator]):
     """Base entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: TSmartCoordinator) -> None:
         """Init the base entity."""

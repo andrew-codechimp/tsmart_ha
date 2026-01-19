@@ -33,7 +33,7 @@ from .const import (
     TEMPERATURE_MODE_HIGH,
     TEMPERATURE_MODE_LOW,
 )
-from .entity import TSmartCoordinatorEntity
+from .entity import TSmartEntity
 from .tsmart import TSmartMode
 
 PARALLEL_UPDATES = 0
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities([TSmartClimateEntity(coordinator)])
 
 
-class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
+class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     """t_smart Climate class."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -84,7 +84,6 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     _attr_target_temperature_step = 5
 
     # Inherit name from DeviceInfo, which is obtained from actual device
-    _attr_has_entity_name = True
     _attr_name = None
 
     @property

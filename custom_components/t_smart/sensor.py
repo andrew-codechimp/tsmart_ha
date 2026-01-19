@@ -21,7 +21,7 @@ from .const import (
     TEMPERATURE_MODE_HIGH,
     TEMPERATURE_MODE_LOW,
 )
-from .entity import TSmartCoordinatorEntity
+from .entity import TSmartEntity
 
 PARALLEL_UPDATES = 0
 
@@ -36,14 +36,13 @@ async def async_setup_entry(
     async_add_entities([TSmartTemperatureSensorEntity(coordinator)])
 
 
-class TSmartTemperatureSensorEntity(TSmartCoordinatorEntity, SensorEntity):
+class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
     """t_smart Temperature Sensor class."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_suggested_display_precision = 1
-    _attr_has_entity_name = True
     _attr_translation_key = "current_temperature"
 
     @property
