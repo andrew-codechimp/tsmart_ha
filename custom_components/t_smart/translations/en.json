@@ -53,8 +53,11 @@
             "relay": {
                 "name": "Relay"
             },
-            "status": {
-                "name": "Status"
+            "error": {
+                "name": "Error"
+            },
+            "warning": {
+                "name": "Warning"
             }
         },
         "sensor": {

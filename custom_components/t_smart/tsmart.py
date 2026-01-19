@@ -36,15 +36,22 @@ class TSmart:
     relay: bool | None = None
     firmware_name: str = ""
     firmware_version: str = ""
-    error_status: bool | None = None
     error_e01: bool = False
+    error_e01_count: int = 0
     error_e02: bool = False
+    error_e02_count: int = 0
     error_e03: bool = False
+    error_e03_count: int = 0
     error_e04: bool = False
-    error_w01: bool = False
-    error_w02: bool = False
-    error_w03: bool = False
+    error_e04_count: int = 0
     error_e05: bool = False
+    error_e05_count: int = 0
+    warning_w01: bool = False
+    warning_w01_count: int = 0
+    warning_w02: bool = False
+    warning_w02_count: int = 0
+    warning_w03: bool = False
+    warning_w03_count: int = 0
     request_successful: bool = False
 
     def __init__(self, ip, device_id=None, name=None):
@@ -268,25 +275,34 @@ class TSmart:
         self.mode = TSmartMode(mode)
         self.relay = bool(relay)
 
-        self.error_e01 = (error_buffer[0] >> 7) & 1 == 1
-        self.error_e02 = (error_buffer[2] >> 7) & 1 == 1
-        self.error_e03 = (error_buffer[4] >> 7) & 1 == 1
-        self.error_e04 = (error_buffer[6] >> 7) & 1 == 1
-        self.error_w01 = (error_buffer[8] >> 7) & 1 == 1
-        self.error_w02 = (error_buffer[10] >> 7) & 1 == 1
-        self.error_w03 = (error_buffer[12] >> 7) & 1 == 1
-        self.error_e05 = (error_buffer[14] >> 7) & 1 == 1
+        # Extract 16-bit values (flag in bit 15, counter in bits 0-14)
+        e01_value = error_buffer[0] | (error_buffer[1] << 8)
+        e02_value = error_buffer[2] | (error_buffer[3] << 8)
+        e03_value = error_buffer[4] | (error_buffer[5] << 8)
+        e04_value = error_buffer[6] | (error_buffer[7] << 8)
+        w01_value = error_buffer[8] | (error_buffer[9] << 8)
+        w02_value = error_buffer[10] | (error_buffer[11] << 8)
+        w03_value = error_buffer[12] | (error_buffer[13] << 8)
+        e05_value = error_buffer[14] | (error_buffer[15] << 8)
 
-        self.error_status = (
-            self.error_e01
-            or self.error_e02
-            or self.error_e03
-            or self.error_e04
-            or self.error_e05
-            or self.error_w01
-            or self.error_w02
-            or self.error_w03
-        )
+        # Extract flag (bit 15) and counter (bits 0-14)
+        self.error_e01 = (e01_value >> 15) & 1 == 1
+        self.error_e01_count = e01_value & 0x7FFF
+        self.error_e02 = (e02_value >> 15) & 1 == 1
+        self.error_e02_count = e02_value & 0x7FFF
+        self.error_e03 = (e03_value >> 15) & 1 == 1
+        self.error_e03_count = e03_value & 0x7FFF
+        self.error_e04 = (e04_value >> 15) & 1 == 1
+        self.error_e04_count = e04_value & 0x7FFF
+        self.error_e05 = (e05_value >> 15) & 1 == 1
+        self.error_e05_count = e05_value & 0x7FFF
+
+        self.warning_w01 = (w01_value >> 15) & 1 == 1
+        self.warning_w01_count = w01_value & 0x7FFF
+        self.warning_w02 = (w02_value >> 15) & 1 == 1
+        self.warning_w02_count = w02_value & 0x7FFF
+        self.warning_w03 = (w03_value >> 15) & 1 == 1
+        self.warning_w03_count = w03_value & 0x7FFF
 
         _LOGGER.info("Received status from %s" % self.ip)
 
