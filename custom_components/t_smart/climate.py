@@ -113,18 +113,11 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
 
-        if hvac_mode == HVACMode.HEAT:
-            await self._tsmart.async_control_set(
-                hvac_mode == HVACMode.HEAT,
-                PRESET_MAP[self.preset_mode],
-                self.target_temperature,
-            )
-        elif hvac_mode == HVACMode.OFF:
-            await self._tsmart.async_control_set(
-                False,
-                PRESET_MAP[self.preset_mode],
-                self.target_temperature,
-            )
+        await self._tsmart.async_control_set(
+            hvac_mode == HVACMode.HEAT,
+            PRESET_MAP[self.preset_mode],
+            self.target_temperature,
+        )
 
         await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
