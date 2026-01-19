@@ -23,7 +23,6 @@ async def async_get_config_entry_diagnostics(
         "entry": {
             "title": entry.title,
             "data": async_redact_data(entry.data, TO_REDACT),
-            "options": entry.options,
             "version": entry.version,
         },
         "device": {
