@@ -15,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import ConfigEntryNotReady
 
-from .common import TSmartConfigEntry
+from .common import TSmartConfigEntry, TSmartData
 from .const import DOMAIN, MIN_HA_VERSION
 from .coordinator import TSmartCoordinator
 
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     coordinator = TSmartCoordinator(hass=hass, config_entry=entry)
-    entry.runtime_data.coordinator = coordinator
+    entry.runtime_data = TSmartData(coordinator=coordinator)
 
     # Get device configuration before first refresh
     await coordinator.async_initialize()
