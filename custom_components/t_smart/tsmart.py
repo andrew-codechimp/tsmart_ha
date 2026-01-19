@@ -318,3 +318,22 @@ class TSmart:
 
         response_struct = struct.Struct("=BBBB")
         response = await self._async_request(request, response_struct)
+
+    async def async_restart(self, offset_ms: int = 1000) -> None:
+        """Restart the device after specified offset time in milliseconds."""
+        if not 100 <= offset_ms <= 10000:
+            raise ValueError("Offset must be between 100ms and 10000ms")
+
+        _LOGGER.info("Restarting device %s after %dms" % (self.ip, offset_ms))
+
+        # Split offset into low and high bytes for sub-command
+        sub = offset_ms & 0xFF  # Low byte
+        sub2 = (offset_ms >> 8) & 0xFF  # High byte
+
+        request = struct.pack("=BBBB", 0x02, sub, sub2, 0)
+
+        response_struct = struct.Struct("=BBBB")
+        # Device may not respond if offset is very short
+        response = await self._async_request(request, response_struct)
+        if response:
+            _LOGGER.info("Restart command acknowledged by %s" % self.ip)

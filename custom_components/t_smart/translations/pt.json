@@ -59,8 +59,11 @@
             "warning": {
                 "name": "Warning"
             }
-        },
-        "sensor": {
+        }, "button": {
+            "restart": {
+                "name": "Reiniciar"
+            }
+        }, "sensor": {
             "current_temperature": {
                 "name": "Current Temperature"
             }
