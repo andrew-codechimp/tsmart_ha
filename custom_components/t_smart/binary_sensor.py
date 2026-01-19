@@ -36,6 +36,6 @@ class TSmartBinarySensorEntity(TSmartCoordinatorEntity, BinarySensorEntity):
         return f"{self._tsmart.device_id}_relay"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Is the relay on."""
         return self._tsmart.relay

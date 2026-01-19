@@ -27,9 +27,16 @@ class TSmartMode(IntEnum):
 class TSmart:
     """Representation of a T-Smart device."""
 
-    firmware_name: str
-    firmware_version: str
-    error_status: bool = False
+    power: bool | None = None
+    temperature_average: float | None = None
+    temperature_high: float | None = None
+    temperature_low: float | None = None
+    mode: TSmartMode | None = None
+    setpoint: float | None = None
+    relay: bool | None = None
+    firmware_name: str = ""
+    firmware_version: str = ""
+    error_status: bool | None = None
     error_e01: bool = False
     error_e02: bool = False
     error_e03: bool = False
@@ -38,19 +45,12 @@ class TSmart:
     error_w02: bool = False
     error_w03: bool = False
     error_e05: bool = False
+    request_successful: bool = False
 
     def __init__(self, ip, device_id=None, name=None):
         self.ip = ip
         self.device_id = device_id
         self.name = name
-        self.power = None
-        self.temperature_average = None
-        self.temperature_high = None
-        self.temperature_low = None
-        self.mode = None
-        self.setpoint = None
-        self.relay = None
-        self.request_successful = False
 
     async def async_discover(stop_on_first=False, tries=2, timeout=2):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
@@ -58,8 +58,6 @@ class TSmart:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(("", 1337))
-
-        _LOGGER.info("Performing discovery")
 
         stream = await asyncio_dgram.from_socket(sock)
         response_struct = struct.Struct("=BBBHL32sBB")
@@ -71,8 +69,6 @@ class TSmart:
             message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
 
             await stream.send(message, ("255.255.255.255", UDP_PORT))
-
-            _LOGGER.info("Discovery message sent")
 
             while True:
                 try:
@@ -206,7 +202,6 @@ class TSmart:
         return data
 
     async def async_get_configuration(self):
-        _LOGGER.info("Async get configuration")
         request = struct.pack("=BBBB", 0x21, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBHL32sBBBBB32s28s32s64s124s")
@@ -242,7 +237,6 @@ class TSmart:
         _LOGGER.info("Received configuration from %s" % self.ip)
 
     async def async_get_status(self):
-        _LOGGER.info("Async get status")
         request = struct.pack("=BBBB", 0xF1, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBBHBHBBH16sB")

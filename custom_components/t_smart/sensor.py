@@ -10,6 +10,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 
@@ -57,7 +58,7 @@ class TSmartTemperatureSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         return f"{self._tsmart.device_id}_temperature"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
             new_value = self._tsmart.temperature_high
@@ -110,6 +111,7 @@ class TSmartStatusSensorEntity(TSmartCoordinatorEntity, SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:
@@ -117,8 +119,10 @@ class TSmartStatusSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         return f"{self._tsmart.device_id}_status"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the status of the device."""
+        if self._tsmart.error_status is None:
+            return None
         return "problem" if self._tsmart.error_status else "ok"
 
     @property
