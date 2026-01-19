@@ -3,20 +3,17 @@
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-)
-from .coordinator import DeviceDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import TSmartCoordinator
 
 
-class TSmartCoordinatorEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
+class TSmartCoordinatorEntity(CoordinatorEntity[TSmartCoordinator]):
     """Base entity."""
 
-    def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: TSmartCoordinator) -> None:
         """Init the base entity."""
         super().__init__(coordinator)
         self._tsmart = coordinator.device
-        self._attr_unique_id = self._tsmart.device_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -24,9 +21,10 @@ class TSmartCoordinatorEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within our domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, self._tsmart.device_id)
             },
             name=self._tsmart.name,
             manufacturer="Tesla Ltd.",
             model="T-Smart",
+            sw_version=self._tsmart.firmware_version,
         )

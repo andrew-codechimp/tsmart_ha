@@ -2,46 +2,43 @@
 
 import asyncio
 import logging
-from datetime import timedelta
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_ECO,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.climate import (
-    PRESET_ECO,
-    PRESET_AWAY,
-    PRESET_BOOST,
-    ATTR_HVAC_MODE,
-    HVACMode,
-    HVACAction,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.temperature import display_temp as show_temp
 
+from .common import TSmartConfigEntry
 from .const import (
-    DOMAIN,
-    COORDINATORS,
+    ATTR_TEMPERATURE_AVERAGE,
+    ATTR_TEMPERATURE_HIGH,
+    ATTR_TEMPERATURE_LOW,
+    PRESET_MANUAL,
     PRESET_SMART,
     PRESET_TIMER,
-    PRESET_MANUAL,
-    ATTR_TEMPERATURE_LOW,
-    TEMPERATURE_MODE_LOW,
-    ATTR_TEMPERATURE_HIGH,
     TEMPERATURE_MODE_HIGH,
-    ATTR_TEMPERATURE_AVERAGE,
+    TEMPERATURE_MODE_LOW,
 )
 from .entity import TSmartCoordinatorEntity
 from .tsmart import TSmartMode
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
-SCAN_INTERVAL = timedelta(seconds=5)
+_LOGGER = logging.getLogger(__name__)
 
 PRESET_MAP = {
     PRESET_MANUAL: TSmartMode.MANUAL,
@@ -53,6 +50,16 @@ PRESET_MAP = {
 }
 
 AFTER_SET_SLEEP = 2  # Seconds
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: TSmartConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the climate platform."""
+    coordinator = config_entry.runtime_data.coordinator
+    async_add_entities([TSmartClimateEntity(coordinator)])
 
 
 class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
@@ -80,9 +87,10 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    async def async_update(self):
-        """Update the state of the climate entity."""
-        await self._tsmart.async_get_status()
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return str(self._tsmart.device_id)
 
     @property
     def hvac_mode(self):
@@ -201,13 +209,3 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
         if super_attrs:
             attrs.update(super_attrs)
         return attrs
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the climate platform."""
-    coordinator = hass.data[DOMAIN][COORDINATORS][config_entry.entry_id]
-    async_add_entities([TSmartClimateEntity(coordinator)])

@@ -1,28 +1,34 @@
 """DataUpdateCoordinator for thermostats."""
 
+import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
-    DOMAIN,
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_TEMPERATURE_MODE,
+    DOMAIN,
     TEMPERATURE_MODE_AVERAGE,
 )
 from .tsmart import TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
+TIMEOUT = 10  # Timeout in seconds for device communication
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+
+class TSmartCoordinator(DataUpdateCoordinator):
     """Manages polling for state changes from the device."""
 
     device: TSmart
@@ -52,6 +58,33 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             config_entry=config_entry,
         )
 
+    async def async_initialize(self) -> None:
+        """Initialize the device configuration."""
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                await self.device.async_get_configuration()
+            _LOGGER.debug("Device configuration loaded for %s", self.device.name)
+        except TimeoutError as err:
+            raise UpdateFailed(
+                f"Timeout loading configuration for device {self.device.name}"
+            ) from err
+        except Exception as err:
+            raise UpdateFailed(
+                f"Error loading configuration for device {self.device.name}: {err}"
+            ) from err
+
     async def _async_update_data(self):
         """Update the state of the device."""
-        await self.device.async_get_status()
+        try:
+            # Get device status
+            async with asyncio.timeout(TIMEOUT):
+                await self.device.async_get_status()
+
+        except TimeoutError as err:
+            raise UpdateFailed(
+                f"Timeout communicating with device {self.device.name}"
+            ) from err
+        except Exception as err:
+            raise UpdateFailed(
+                f"Error communicating with device {self.device.name}: {err}"
+            ) from err

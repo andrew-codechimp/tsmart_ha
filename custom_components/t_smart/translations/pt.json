@@ -47,5 +47,17 @@
                 "temperature_mode_low": "Low"
             }
         }
+    },
+    "entity": {
+        "binary_sensor": {
+            "relay": {
+                "name": "Relay"
+            }
+        },
+        "sensor": {
+            "current_temperature": {
+                "name": "Current Temperature"
+            }
+        }
     }
 }

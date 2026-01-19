@@ -30,7 +30,7 @@ dev = [
     "asyncio-dgram",
     "awesomeversion",
     "colorlog",
-    "homeassistant==2025.4.0",
+    "homeassistant==2025.9.0",
     "mypy",
     "ruff",
     "voluptuous",
@@ -125,7 +125,6 @@ ignore = [
 max-complexity = 25
 
 [tool.ruff.lint.isort]
-length-sort = true
 section-order = [
   "future",
   "standard-library",
