@@ -1,0 +1,16 @@
+{
+    "entity": {
+        "sensor": {
+
+            "index_status": {
+                "default": "mdi:check-circle",
+                "state": {
+                    "error": "mdi:alert-circle",
+                    "ok": "mdi:check-circle",
+                    "unknown": "mdi:help-circle",
+                    "warning": "mdi:alert"
+                }
+            }
+        }
+    }
+}

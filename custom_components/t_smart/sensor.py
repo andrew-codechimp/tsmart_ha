@@ -126,6 +126,17 @@ class TSmartStatusSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         return "problem" if self._tsmart.error_status else "ok"
 
     @property
+    def icon(self) -> str:
+        """Return the icon based on the status."""
+        if self._tsmart.error_status is None:
+            return "mdi:help-circle-outline"
+        return (
+            "mdi:alert-circle"
+            if self._tsmart.error_status
+            else "mdi:alert-circle-outline"
+        )
+
+    @property
     def extra_state_attributes(self) -> dict[str, bool] | None:
         """Return the state attributes of the sensor."""
         attrs = {
