@@ -52,18 +52,14 @@
         "binary_sensor": {
             "relay": {
                 "name": "Relay"
+            },
+            "status": {
+                "name": "Estado"
             }
         },
         "sensor": {
             "current_temperature": {
                 "name": "Current Temperature"
-            },
-            "status": {
-                "name": "Estado",
-                "state": {
-                    "ok": "OK",
-                    "problem": "Problema"
-                }
             }
         }
     }
