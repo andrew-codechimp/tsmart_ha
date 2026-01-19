@@ -90,7 +90,7 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._tsmart.device_id
+        return str(self._tsmart.device_id)
 
     @property
     def hvac_mode(self):
