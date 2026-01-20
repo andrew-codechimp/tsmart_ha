@@ -12,8 +12,9 @@ This project is not endorsed by, directly affiliated with, maintained, authorize
 
 ## Installation
 
-⚠️ If you are using the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new.
-As this has moved to IP addresses rather than broadcast discovery you will need a fixed IP address on your thermostat and re-add it when changing to this integration.
+⚠️ Your T-Smart thermostat must have a static IP address.
+
+If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. As this has moved to IP addresses rather than broadcast discovery on start you will need a fixed IP address on your thermostat and re-add it when changing to this integration.
 
 ### HACS
 

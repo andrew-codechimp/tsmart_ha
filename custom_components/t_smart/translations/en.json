@@ -52,6 +52,17 @@
         "binary_sensor": {
             "relay": {
                 "name": "Relay"
+            },
+            "error": {
+                "name": "Error"
+            },
+            "warning": {
+                "name": "Warning"
+            }
+        },
+        "button": {
+            "restart": {
+                "name": "Restart"
             }
         },
         "sensor": {

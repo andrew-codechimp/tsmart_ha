@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp
 
 from .common import TSmartConfigEntry
 from .const import (
@@ -21,7 +21,7 @@ from .const import (
     TEMPERATURE_MODE_HIGH,
     TEMPERATURE_MODE_LOW,
 )
-from .entity import TSmartCoordinatorEntity
+from .entity import TSmartEntity
 
 PARALLEL_UPDATES = 0
 
@@ -33,17 +33,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartSensorEntity(coordinator)])
+    async_add_entities([TSmartTemperatureSensorEntity(coordinator)])
 
 
-class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
-    """t_smart Sensor class."""
+class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
+    """t_smart Temperature Sensor class."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_suggested_display_precision = 1
-    _attr_has_entity_name = True
     _attr_translation_key = "current_temperature"
 
     @property
@@ -52,7 +51,7 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         return f"{self._tsmart.device_id}_temperature"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
             new_value = self._tsmart.temperature_high
@@ -61,7 +60,7 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
         else:
             new_value = self._tsmart.temperature_average
 
-        return show_temp(
+        return display_temp(
             self.hass,
             new_value,
             self._attr_native_unit_of_measurement,
@@ -74,19 +73,19 @@ class TSmartSensorEntity(TSmartCoordinatorEntity, SensorEntity):
 
         # Temperature related attributes
         attrs = {
-            ATTR_TEMPERATURE_LOW: show_temp(
+            ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
                 self._tsmart.temperature_low,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_HIGH: show_temp(
+            ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
                 self._tsmart.temperature_high,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_AVERAGE: show_temp(
+            ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
                 self._tsmart.temperature_average,
                 self._attr_native_unit_of_measurement,

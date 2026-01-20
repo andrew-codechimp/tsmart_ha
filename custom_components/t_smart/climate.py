@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp
 
 from .common import TSmartConfigEntry
 from .const import (
@@ -33,7 +33,7 @@ from .const import (
     TEMPERATURE_MODE_HIGH,
     TEMPERATURE_MODE_LOW,
 )
-from .entity import TSmartCoordinatorEntity
+from .entity import TSmartEntity
 from .tsmart import TSmartMode
 
 PARALLEL_UPDATES = 0
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities([TSmartClimateEntity(coordinator)])
 
 
-class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
+class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     """t_smart Climate class."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -84,7 +84,6 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
     _attr_target_temperature_step = 5
 
     # Inherit name from DeviceInfo, which is obtained from actual device
-    _attr_has_entity_name = True
     _attr_name = None
 
     @property
@@ -113,18 +112,11 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
 
-        if hvac_mode == HVACMode.HEAT:
-            await self._tsmart.async_control_set(
-                hvac_mode == HVACMode.HEAT,
-                PRESET_MAP[self.preset_mode],
-                self.target_temperature,
-            )
-        elif hvac_mode == HVACMode.OFF:
-            await self._tsmart.async_control_set(
-                False,
-                PRESET_MAP[self.preset_mode],
-                self.target_temperature,
-            )
+        await self._tsmart.async_control_set(
+            hvac_mode == HVACMode.HEAT,
+            PRESET_MAP[self.preset_mode],
+            self.target_temperature,
+        )
 
         await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
@@ -185,19 +177,19 @@ class TSmartClimateEntity(TSmartCoordinatorEntity, ClimateEntity):
 
         # Temperature related attributes
         attrs = {
-            ATTR_TEMPERATURE_LOW: show_temp(
+            ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
                 self._tsmart.temperature_low,
                 self._attr_temperature_unit,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_HIGH: show_temp(
+            ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
                 self._tsmart.temperature_high,
                 self._attr_temperature_unit,
                 PRECISION_TENTHS,
             ),
-            ATTR_TEMPERATURE_AVERAGE: show_temp(
+            ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
                 self._tsmart.temperature_average,
                 self._attr_temperature_unit,
