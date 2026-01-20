@@ -6,8 +6,8 @@
 
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
-The integration provides a climate control with preset modes, current temperature sensor, and a binary sensor for the relay.  
-A restart button and problem binary sensors with attributes for error codes are also provided for diagnostic purposes.
+The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.  
+Error and warning problem binary sensors with attributes for error/warning codes are also provided for diagnostic purposes.
 
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
