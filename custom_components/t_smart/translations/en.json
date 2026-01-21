@@ -58,6 +58,30 @@
             },
             "warning": {
                 "name": "Warning"
+            },
+            "e01": {
+                "name": "E01 - Broken Sensors"
+            },
+            "e02": {
+                "name": "E02 - Overheating"
+            },
+            "e03": {
+                "name": "E03 - Dry Heating"
+            },
+            "e04": {
+                "name": "E04 - Serial Comm ST Error"
+            },
+            "e05": {
+                "name": "E05 - Serial Comm ESP Error"
+            },
+            "w01": {
+                "name": "W01 - Bad High Sensor"
+            },
+            "w02": {
+                "name": "W02 - Bad Low Sensor"
+            },
+            "w03": {
+                "name": "W03 - Long Heating"
             }
         },
         "button": {
