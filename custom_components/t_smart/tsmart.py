@@ -70,12 +70,13 @@ class DiscoveredDevice:
 class TSmart:
     """Representation of a T-Smart device."""
 
+    ip: str
     device_id: str | None = None
     name: str | None = None
     firmware_name: str = ""
     firmware_version: str = ""
 
-    def __init__(self, ip, device_id: str | None = None, name: str | None = None):
+    def __init__(self, ip: str, device_id: str | None = None, name: str | None = None):
         self.ip = ip
         self.device_id = device_id
         self.name = name
