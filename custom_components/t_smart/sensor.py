@@ -48,17 +48,17 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._tsmart.device_id}_temperature"
+        return f"{self.device.device_id}_temperature"
 
     @property
     def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
-            new_value = self._tsmart.temperature_high
+            new_value = self.coordinator.data.temperature_high
         elif self.coordinator.temperature_mode == TEMPERATURE_MODE_LOW:
-            new_value = self._tsmart.temperature_low
+            new_value = self.coordinator.data.temperature_low
         else:
-            new_value = self._tsmart.temperature_average
+            new_value = self.coordinator.data.temperature_average
 
         return display_temp(
             self.hass,
@@ -75,19 +75,19 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         attrs = {
             ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
-                self._tsmart.temperature_low,
+                self.coordinator.data.temperature_low,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
-                self._tsmart.temperature_high,
+                self.coordinator.data.temperature_high,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
-                self._tsmart.temperature_average,
+                self.coordinator.data.temperature_average,
                 self._attr_native_unit_of_measurement,
                 PRECISION_TENTHS,
             ),

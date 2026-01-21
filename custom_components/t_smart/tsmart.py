@@ -2,6 +2,7 @@ import asyncio
 import logging
 import socket
 import struct
+from dataclasses import dataclass
 from enum import IntEnum
 
 import asyncio_dgram
@@ -24,35 +25,46 @@ class TSmartMode(IntEnum):
     CRITICAL = 0x22
 
 
+@dataclass
+class TSmartConfiguration:
+    device_id: str
+    name: str
+    firmware_name: str
+    firmware_version: str
+
+
+@dataclass
+class TSmartStatus:
+    power: bool
+    temperature_average: float
+    temperature_high: float
+    temperature_low: float
+    setpoint: float
+    mode: TSmartMode
+    relay: bool
+    e01: bool
+    e01_count: int
+    e02: bool
+    e02_count: int
+    e03: bool
+    e03_count: int
+    e04: bool
+    e04_count: int
+    e05: bool
+    e05_count: int
+    w01: bool
+    w01_count: int
+    w02: bool
+    w02_count: int
+    w03: bool
+    w03_count: int
+
+
 class TSmart:
     """Representation of a T-Smart device."""
 
-    power: bool | None = None
-    temperature_average: float | None = None
-    temperature_high: float | None = None
-    temperature_low: float | None = None
-    mode: TSmartMode | None = None
-    setpoint: float | None = None
-    relay: bool | None = None
     firmware_name: str = ""
     firmware_version: str = ""
-    error_e01: bool = False
-    error_e01_count: int = 0
-    error_e02: bool = False
-    error_e02_count: int = 0
-    error_e03: bool = False
-    error_e03_count: int = 0
-    error_e04: bool = False
-    error_e04_count: int = 0
-    error_e05: bool = False
-    error_e05_count: int = 0
-    warning_w01: bool = False
-    warning_w01_count: int = 0
-    warning_w02: bool = False
-    warning_w02_count: int = 0
-    warning_w03: bool = False
-    warning_w03_count: int = 0
-    request_successful: bool = False
 
     def __init__(self, ip, device_id=None, name=None):
         self.ip = ip
@@ -208,14 +220,14 @@ class TSmart:
         self.request_successful = True
         return data
 
-    async def async_get_configuration(self):
+    async def async_get_configuration(self) -> TSmartConfiguration | None:
         request = struct.pack("=BBBB", 0x21, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBHL32sBBBBB32s28s32s64s124s")
         response = await self._async_request(request, response_struct)
 
         if response is None:
-            return
+            return None
 
         (
             cmd,
@@ -238,19 +250,30 @@ class TSmart:
 
         self.device_id = "%4X" % device_id
         self.name = device_name.decode("utf-8").split("\x00")[0]
-        self.firmware_version = f"{firmware_version_major}.{firmware_version_minor}.{firmware_version_deployment}"
-        self.firmware_name = firmware_name.decode("utf-8").split("\x00")[0]
+        self.firmware_name = (firmware_name.decode("utf-8").split("\x00")[0],)
+        self.firmware_version = (
+            f"{firmware_version_major}.{firmware_version_minor}.{firmware_version_deployment}",
+        )
+
+        configuration = TSmartConfiguration(
+            device_id=self.device_id,
+            name=self.name,
+            firmware_name=self.firmware_name,
+            firmware_version=self.firmware_version,
+        )
 
         _LOGGER.info("Received configuration from %s" % self.ip)
 
-    async def async_get_status(self):
+        return configuration
+
+    async def async_get_status(self) -> TSmartStatus | None:
         request = struct.pack("=BBBB", 0xF1, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBBHBHBBH16sB")
         response = await self._async_request(request, response_struct)
 
         if response is None:
-            return
+            return None
 
         (
             cmd,
@@ -267,14 +290,6 @@ class TSmart:
             checksum,
         ) = response_struct.unpack(response)
 
-        self.temperature_average = (t_high + t_low) / 20
-        self.temperature_high = t_high / 10
-        self.temperature_low = t_low / 10
-        self.setpoint = setpoint / 10
-        self.power = bool(power)
-        self.mode = TSmartMode(mode)
-        self.relay = bool(relay)
-
         # Extract 16-bit values (flag in bit 15, counter in bits 0-14)
         e01_value = error_buffer[0] | (error_buffer[1] << 8)
         e02_value = error_buffer[2] | (error_buffer[3] << 8)
@@ -285,26 +300,34 @@ class TSmart:
         w03_value = error_buffer[12] | (error_buffer[13] << 8)
         e05_value = error_buffer[14] | (error_buffer[15] << 8)
 
-        # Extract flag (bit 15) and counter (bits 0-14)
-        self.error_e01 = (e01_value >> 15) & 1 == 1
-        self.error_e01_count = e01_value & 0x7FFF
-        self.error_e02 = (e02_value >> 15) & 1 == 1
-        self.error_e02_count = e02_value & 0x7FFF
-        self.error_e03 = (e03_value >> 15) & 1 == 1
-        self.error_e03_count = e03_value & 0x7FFF
-        self.error_e04 = (e04_value >> 15) & 1 == 1
-        self.error_e04_count = e04_value & 0x7FFF
-        self.error_e05 = (e05_value >> 15) & 1 == 1
-        self.error_e05_count = e05_value & 0x7FFF
-
-        self.warning_w01 = (w01_value >> 15) & 1 == 1
-        self.warning_w01_count = w01_value & 0x7FFF
-        self.warning_w02 = (w02_value >> 15) & 1 == 1
-        self.warning_w02_count = w02_value & 0x7FFF
-        self.warning_w03 = (w03_value >> 15) & 1 == 1
-        self.warning_w03_count = w03_value & 0x7FFF
+        status = TSmartStatus(
+            power=bool(power),
+            temperature_average=(t_high + t_low) / 20,
+            temperature_high=t_high / 10,
+            temperature_low=t_low / 10,
+            setpoint=setpoint / 10,
+            mode=TSmartMode(mode),
+            relay=bool(relay),
+            e01=(e01_value >> 15) & 1 == 1,
+            e01_count=e01_value & 0x7FFF,
+            e02=(e02_value >> 15) & 1 == 1,
+            e02_count=e02_value & 0x7FFF,
+            e03=(e03_value >> 15) & 1 == 1,
+            e03_count=e03_value & 0x7FFF,
+            e04=(e04_value >> 15) & 1 == 1,
+            e04_count=e04_value & 0x7FFF,
+            e05=(e05_value >> 15) & 1 == 1,
+            e05_count=e05_value & 0x7FFF,
+            w01=(w01_value >> 15) & 1 == 1,
+            w01_count=w01_value & 0x7FFF,
+            w02=(w02_value >> 15) & 1 == 1,
+            w02_count=w02_value & 0x7FFF,
+            w03=(w03_value >> 15) & 1 == 1,
+            w03_count=w03_value & 0x7FFF,
+        )
 
         _LOGGER.info("Received status from %s" % self.ip)
+        return status
 
     async def async_control_set(self, power, mode, setpoint):
         _LOGGER.info("Async control set %d %d %0.2f" % (power, mode, setpoint))

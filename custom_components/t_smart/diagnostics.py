@@ -16,8 +16,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: TSmartConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data.coordinator
-    device = coordinator.device
+    device = entry.runtime_data.device
+    data = entry.runtime_data.coordinator.data
 
     return {
         "entry": {
@@ -28,33 +28,28 @@ async def async_get_config_entry_diagnostics(
         "device": {
             "firmware_name": device.firmware_name,
             "firmware_version": device.firmware_version,
-            "power": device.power,
-            "mode": device.mode.name if device.mode is not None else None,
-            "setpoint": device.setpoint,
-            "temperature_average": device.temperature_average,
-            "temperature_high": device.temperature_high,
-            "temperature_low": device.temperature_low,
-            "relay": device.relay,
-            "error_e01": device.error_e01,
-            "error_e01_count": device.error_e01_count,
-            "error_e02": device.error_e02,
-            "error_e02_count": device.error_e02_count,
-            "error_e03": device.error_e03,
-            "error_e03_count": device.error_e03_count,
-            "error_e04": device.error_e04,
-            "error_e04_count": device.error_e04_count,
-            "error_e05": device.error_e05,
-            "error_e05_count": device.error_e05_count,
-            "warning_w01": device.warning_w01,
-            "warning_w01_count": device.warning_w01_count,
-            "warning_w02": device.warning_w02,
-            "warning_w02_count": device.warning_w02_count,
-            "warning_w03": device.warning_w03,
-            "warning_w03_count": device.warning_w03_count,
-            "request_successful": device.request_successful,
-        },
-        "coordinator": {
-            "last_update_success": coordinator.last_update_success,
-            "temperature_mode": coordinator.temperature_mode,
+            "power": data.power,
+            "mode": data.mode.name if data.mode is not None else None,
+            "setpoint": data.setpoint,
+            "temperature_average": data.temperature_average,
+            "temperature_high": data.temperature_high,
+            "temperature_low": data.temperature_low,
+            "relay": data.relay,
+            "e01": data.e01,
+            "e01_count": data.e01_count,
+            "e02": data.e02,
+            "e02_count": data.e02_count,
+            "e03": data.e03,
+            "e03_count": data.e03_count,
+            "e04": data.e04,
+            "e04_count": data.e04_count,
+            "e05": data.e05,
+            "e05_count": data.e05_count,
+            "w01": data.w01,
+            "w01_count": data.w01_count,
+            "w02": data.w02,
+            "w02_count": data.w02_count,
+            "w03": data.w03,
+            "w03_count": data.w03_count,
         },
     }

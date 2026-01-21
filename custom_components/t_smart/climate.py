@@ -89,18 +89,18 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return str(self._tsmart.device_id)
+        return str(self.device.device_id)
 
     @property
     def hvac_mode(self):
         """Get the current mode."""
-        return HVACMode.HEAT if self._tsmart.power else HVACMode.OFF
+        return HVACMode.HEAT if self.coordinator.data.power else HVACMode.OFF
 
     @property
     def hvac_action(self):
         """Get the current action."""
-        if self._tsmart.power:
-            if self._tsmart.relay:
+        if self.coordinator.data.power:
+            if self.coordinator.data.relay:
                 return HVACAction.HEATING
             return HVACAction.IDLE
         return HVACAction.OFF
@@ -112,7 +112,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
 
-        await self._tsmart.async_control_set(
+        await self.device.async_control_set(
             hvac_mode == HVACMode.HEAT,
             PRESET_MAP[self.preset_mode],
             self.target_temperature,
@@ -125,17 +125,17 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     def current_temperature(self):
         """Get the current temperature."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
-            return self._tsmart.temperature_high
+            return self.coordinator.data.temperature_high
 
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_LOW:
-            return self._tsmart.temperature_low
+            return self.coordinator.data.temperature_low
 
-        return self._tsmart.temperature_average
+        return self.coordinator.data.temperature_average
 
     @property
     def target_temperature(self):
         """Get the target temperature."""
-        return self._tsmart.setpoint
+        return self.coordinator.data.setpoint
 
     async def async_set_temperature(self, **kwargs):
         """Set the target temperature."""
@@ -145,7 +145,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
 
         if temperature:
-            await self._tsmart.async_control_set(
+            await self.device.async_control_set(
                 hvac_mode == HVACMode.HEAT,
                 PRESET_MAP[self.preset_mode],
                 temperature,
@@ -159,11 +159,13 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Get the preset mode."""
-        return next((k for k, v in PRESET_MAP.items() if v == self._tsmart.mode), None)
+        return next(
+            (k for k, v in PRESET_MAP.items() if v == self.coordinator.data.mode), None
+        )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set the preset mode."""
-        await self._tsmart.async_control_set(
+        await self.device.async_control_set(
             self.hvac_mode == HVACMode.HEAT,
             PRESET_MAP[preset_mode],
             self.target_temperature,
@@ -179,19 +181,19 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         attrs = {
             ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
-                self._tsmart.temperature_low,
+                self.coordinator.data.temperature_low,
                 self._attr_temperature_unit,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
-                self._tsmart.temperature_high,
+                self.coordinator.data.temperature_high,
                 self._attr_temperature_unit,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
-                self._tsmart.temperature_average,
+                self.coordinator.data.temperature_average,
                 self._attr_temperature_unit,
                 PRECISION_TENTHS,
             ),

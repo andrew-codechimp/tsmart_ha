@@ -7,6 +7,8 @@ import logging
 from awesomeversion.awesomeversion import AwesomeVersion
 
 from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_IP_ADDRESS,
     Platform,
     __version__ as HA_VERSION,  # noqa: N812
 )
@@ -16,8 +18,15 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import ConfigEntryNotReady
 
 from .common import TSmartConfigEntry, TSmartData
-from .const import DOMAIN, MIN_HA_VERSION
+from .const import (
+    CONF_DEVICE_NAME,
+    CONF_TEMPERATURE_MODE,
+    DOMAIN,
+    MIN_HA_VERSION,
+    TEMPERATURE_MODE_AVERAGE,
+)
 from .coordinator import TSmartCoordinator
+from .tsmart import TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,13 +98,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    coordinator = TSmartCoordinator(hass=hass, config_entry=entry)
-    entry.runtime_data = TSmartData(coordinator=coordinator)
+    device = TSmart(
+        entry.data[CONF_IP_ADDRESS],
+        entry.data[CONF_DEVICE_ID],
+        entry.data[CONF_DEVICE_NAME],
+    )
+
+    temperature_mode = (
+        entry.data.get(CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE),
+    )
 
     # Get device configuration before first refresh
-    await coordinator.async_initialize()
-    if coordinator.device.request_successful is False:
-        raise ConfigEntryNotReady(f"Unable to connect to {coordinator.device.ip}")
+    configuration = await device.async_get_configuration()
+    if not configuration:
+        # Attempt discovery on timeout
+        discovered_devices: list[TSmart] = await TSmart.async_discover()
+
+        if not discovered_devices:
+            raise ConfigEntryNotReady(
+                f"Timeout connecting to device {device.name} on {device.ip}"
+            )
+
+        for discovered_device in discovered_devices:
+            if device.device_id == entry.data[CONF_DEVICE_ID]:
+                new_data = entry.data.copy()
+                new_data[CONF_IP_ADDRESS] = discovered_device.ip
+                hass.config_entries.async_update_entry(entry, data=new_data)
+                _LOGGER.debug(
+                    "%s: Changed IP address to %s",
+                    device.device_id,
+                    device.ip,
+                )
+                device.ip = discovered_device.ip
+                configuration = await device.async_get_configuration()
+                break
+
+    if not configuration:
+        raise ConfigEntryNotReady(f"Unable to connect to {device.ip}")
+
+    coordinator = TSmartCoordinator(
+        hass=hass, config_entry=entry, device=device, temperature_mode=temperature_mode
+    )
+    entry.runtime_data = TSmartData(device=device, coordinator=coordinator)
 
     await coordinator.async_config_entry_first_refresh()
     if coordinator.device.request_successful is False:

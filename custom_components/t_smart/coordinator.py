@@ -1,54 +1,40 @@
 """DataUpdateCoordinator for thermostats."""
 
-import asyncio
 import logging
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import (
-    CONF_DEVICE_ID,
-    CONF_DEVICE_NAME,
-    CONF_TEMPERATURE_MODE,
-    DOMAIN,
-    TEMPERATURE_MODE_AVERAGE,
-)
-from .tsmart import TSmart
+from .const import DOMAIN
+from .tsmart import TSmart, TSmartStatus
 
 _LOGGER = logging.getLogger(__name__)
 
-TIMEOUT = 10  # Timeout in seconds for device communication
 
-
-class TSmartCoordinator(DataUpdateCoordinator):
+class TSmartCoordinator(DataUpdateCoordinator[TSmartStatus]):
     """Manages polling for state changes from the device."""
 
     device: TSmart
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        device: TSmart,
+        temperature_mode: str,
+    ) -> None:
         """Initialize the data update coordinator."""
 
-        self.config_entry = config_entry
-        self.device = TSmart(
-            config_entry.data[CONF_IP_ADDRESS],
-            config_entry.data[CONF_DEVICE_ID],
-            config_entry.data[CONF_DEVICE_NAME],
-        )
+        self.device = device
         self._attr_unique_id = self.device.device_id
-        self._error_count = 0
 
-        self.temperature_mode = config_entry.data.get(
-            CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
-        )
+        self.temperature_mode = temperature_mode
 
         super().__init__(
             hass,
@@ -58,33 +44,10 @@ class TSmartCoordinator(DataUpdateCoordinator):
             config_entry=config_entry,
         )
 
-    async def async_initialize(self) -> None:
-        """Initialize the device configuration."""
-        try:
-            async with asyncio.timeout(TIMEOUT):
-                await self.device.async_get_configuration()
-            _LOGGER.debug("Device configuration loaded for %s", self.device.name)
-        except TimeoutError as err:
-            raise UpdateFailed(
-                f"Timeout loading configuration for device {self.device.name}"
-            ) from err
-        except Exception as err:
-            raise UpdateFailed(
-                f"Error loading configuration for device {self.device.name}: {err}"
-            ) from err
-
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> TSmartStatus:
         """Update the state of the device."""
-        try:
-            # Get device status
-            async with asyncio.timeout(TIMEOUT):
-                await self.device.async_get_status()
-
-        except TimeoutError as err:
-            raise UpdateFailed(
-                f"Timeout communicating with device {self.device.name}"
-            ) from err
-        except Exception as err:
-            raise UpdateFailed(
-                f"Error communicating with device {self.device.name}: {err}"
-            ) from err
+        # Get device status
+        status = await self.device.async_get_status()
+        if not status:
+            raise UpdateFailed(f"Unsuccessful request to device {self.device.name}")
+        return status

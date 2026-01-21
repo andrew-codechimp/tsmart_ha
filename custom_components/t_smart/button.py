@@ -38,9 +38,9 @@ class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._tsmart.device_id}_restart"
+        return f"{self.device.device_id}_restart"
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        _LOGGER.info("Restart button pressed for %s", self._tsmart.name)
-        await self._tsmart.async_restart(1000)
+        _LOGGER.info("Restart button pressed for %s", self.device.name)
+        await self.device.async_restart(1000)

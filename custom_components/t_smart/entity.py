@@ -15,7 +15,7 @@ class TSmartEntity(CoordinatorEntity[TSmartCoordinator]):
     def __init__(self, coordinator: TSmartCoordinator) -> None:
         """Init the base entity."""
         super().__init__(coordinator)
-        self._tsmart = coordinator.device
+        self.device = coordinator.device
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -23,10 +23,10 @@ class TSmartEntity(CoordinatorEntity[TSmartCoordinator]):
         return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within our domain
-                (DOMAIN, self._tsmart.device_id)
+                (DOMAIN, self.device.device_id)
             },
-            name=self._tsmart.name,
+            name=self.device.name,
             manufacturer="Tesla Ltd.",
             model="T-Smart",
-            sw_version=self._tsmart.firmware_version,
+            sw_version=self.device.firmware_version,
         )
