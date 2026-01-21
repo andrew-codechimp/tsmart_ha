@@ -44,7 +44,7 @@ BINARY_SENSORS: tuple[TSmartBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda status: status.data.e02 and status.mode == TSmartMode.CRITICAL,
+        value_fn=lambda status: status.e02 and status.mode == TSmartMode.CRITICAL,
         count_fn=lambda status: status.e02_count,
     ),
     TSmartBinarySensorEntityDescription(
