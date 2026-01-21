@@ -5,13 +5,10 @@
     "@andrew-codechimp"
   ],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://github.com/andrew-codechimp/tsmart_ha",
-  "homekit": {},
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/andrew-codechimp/tsmart_ha/issues",
-  "ssdp": [],
-  "version": "1.0.0-dev",
-  "zeroconf": []
+  "requirements": [ ],
+  "version": "1.0.0-dev"
 }

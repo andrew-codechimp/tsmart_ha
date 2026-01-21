@@ -13,9 +13,9 @@ This project is not endorsed by, directly affiliated with, maintained, authorize
 
 ## Installation
 
-⚠️ Your T-Smart thermostat must have a static IP address.
+If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
-If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. As this has moved to IP addresses rather than broadcast discovery on start you will need a fixed IP address on your thermostat and re-add it when changing to this integration.
+⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address, it is recommended to have it static if possible anyway to improve integration performance.
 
 ### HACS
 
@@ -45,10 +45,9 @@ After restarting Home Assistant:
 
 - Find "T-Smart Thermostat" and click on it.
 
-- Click "OK" and any thermostats on your network should be discovered, or you can manually enter their IP address if not found.  
-  Thermostats must have a fixed IP address to avoid re-discovery.
+- Click "OK" and any thermostats on the same network should be discovered, or you can manually enter their IP address if not found.  
 
-- If your change the IP address of your thermostat you will have to modify this in the integration by going into settings/configure.
+- If your change the IP address of your thermostat the integration will try to rediscover it automatically at restart. If your thermostat is on a different network you will have to modify this in the integration by going into settings/configure.
 
 - By default the integration takes the average of both sensors within the thermostats, this can be changed by going into settings, configuring the thermostat and choosing a different temperature mode. For vertical thermostats the High setting will match the display and the app.
 
