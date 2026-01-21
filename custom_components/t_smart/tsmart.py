@@ -60,6 +60,13 @@ class TSmartStatus:
     w03_count: int
 
 
+@dataclass
+class DiscoveredDevice:
+    ip: str
+    device_id: str
+    name: str
+
+
 class TSmart:
     """Representation of a T-Smart device."""
 
@@ -71,7 +78,9 @@ class TSmart:
         self.device_id = device_id
         self.name = name
 
-    async def async_discover(stop_on_first=False, tries=2, timeout=2):
+    async def async_discover(
+        stop_on_first=False, tries=2, timeout=2
+    ) -> list[DiscoveredDevice]:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -81,7 +90,7 @@ class TSmart:
         stream = await asyncio_dgram.from_socket(sock)
         response_struct = struct.Struct("=BBBHL32sBB")
 
-        devices = dict()
+        devices: dict[str, DiscoveredDevice] = {}
 
         data = None
         for i in range(tries):
@@ -141,7 +150,7 @@ class TSmart:
                         device_name = name.decode("utf-8").split("\x00")[0]
                         device_id_str = "%4X" % device_id
                         _LOGGER.info("Discovered %s %s" % (device_id_str, device_name))
-                        devices[remote_addr[0]] = TSmart(
+                        devices[remote_addr[0]] = DiscoveredDevice(
                             remote_addr[0], device_id_str, device_name
                         )
                         if stop_on_first:

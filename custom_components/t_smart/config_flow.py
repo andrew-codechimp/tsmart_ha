@@ -26,7 +26,7 @@ from .const import (
     TEMPERATURE_MODE_AVERAGE,
     TEMPERATURE_MODES,
 )
-from .tsmart import TSmart
+from .tsmart import DiscoveredDevice, TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Discover an unconfigured TSmart thermostat."""
         self.discovery_info = None
 
-        devices: list[TSmart] = await TSmart.async_discover()
+        devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         for device in devices:
             existing_entries = [

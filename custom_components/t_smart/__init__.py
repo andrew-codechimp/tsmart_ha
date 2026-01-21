@@ -26,7 +26,7 @@ from .const import (
     TEMPERATURE_MODE_AVERAGE,
 )
 from .coordinator import TSmartCoordinator
-from .tsmart import TSmart
+from .tsmart import DiscoveredDevice, TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
     configuration = await device.async_get_configuration()
     if not configuration:
         # Attempt discovery on timeout
-        discovered_devices: list[TSmart] = await TSmart.async_discover()
+        discovered_devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         if not discovered_devices:
             raise ConfigEntryNotReady(
