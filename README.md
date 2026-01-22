@@ -1,6 +1,8 @@
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![Downloads][download-latest-shield]](Downloads)
+[![License][license-shield]](LICENSE)
+[![hacs][hacsbadge]][hacs]
 
 # Tesla T-Smart thermostat Home Assistant integration
 
@@ -85,9 +87,10 @@ Thanks to pdw-mb for the [original](https://github.com/pdw-mb/tsmart_ha) version
 <!---->
 
 [hacs]: https://github.com/hacs/integration
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
 [download-latest-shield]: https://img.shields.io/github/downloads/andrew-codechimp/tsmart_ha/latest/total?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [commits]: https://github.com/andrew-codechimp/tsmart_ha/commits/main
+[license-shield]: https://img.shields.io/github/license/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [releases]: https://github.com/andrew-codechimp/tsmart_ha/releases
