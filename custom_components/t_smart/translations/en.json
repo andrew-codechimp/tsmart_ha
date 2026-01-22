@@ -87,6 +87,9 @@
         "button": {
             "restart": {
                 "name": "Restart"
+            },
+            "timesync": {
+                "name": "Synchronise Time"
             }
         },
         "sensor": {

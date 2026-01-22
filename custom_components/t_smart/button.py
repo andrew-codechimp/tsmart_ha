@@ -25,6 +25,7 @@ async def async_setup_entry(
     """Set up the button platform."""
     coordinator = config_entry.runtime_data.coordinator
     async_add_entities([TSmartRestartButtonEntity(coordinator)])
+    async_add_entities([TSmartTimesyncButtonEntity(coordinator)])
 
 
 class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):
@@ -33,7 +34,6 @@ class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "restart"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:restart"
 
     @property
     def unique_id(self) -> str:
@@ -44,3 +44,22 @@ class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):
         """Handle the button press."""
         _LOGGER.info("Restart button pressed for %s", self.device.name)
         await self.device.async_restart(1000)
+
+
+class TSmartTimesyncButtonEntity(TSmartEntity, ButtonEntity):
+    """t_smart Timesync Button class."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "timesync"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.device.device_id}_timesync"
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.info("Timesync button pressed for %s", self.device.name)
+        await self.device.async_timesync()

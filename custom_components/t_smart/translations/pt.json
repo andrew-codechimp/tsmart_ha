@@ -86,6 +86,9 @@
         }, "button": {
             "restart": {
                 "name": "Reiniciar"
+            },
+            "timesync": {
+                "name": "Synchronise Time"
             }
         }, "sensor": {
             "current_temperature": {

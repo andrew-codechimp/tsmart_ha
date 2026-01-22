@@ -2,6 +2,7 @@ import asyncio
 import logging
 import socket
 import struct
+import time
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -372,3 +373,16 @@ class TSmart:
         response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Restart command acknowledged by %s" % self.ip)
+
+    async def async_timesync(self) -> None:
+        """Set the device time using UTC timestamp in milliseconds."""
+        timestamp_ms = int(time.time() * 1000)
+
+        _LOGGER.info("Setting time on device %s to %d" % (self.ip, timestamp_ms))
+
+        request = struct.pack("=BBBIB", 0x03, 0, 0, timestamp_ms, 0)
+
+        response_struct = struct.Struct("=BBBB")
+        response = await self._async_request(request, response_struct)
+        if response:
+            _LOGGER.info("Time set command acknowledged by %s" % self.ip)
