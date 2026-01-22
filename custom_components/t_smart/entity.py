@@ -26,7 +26,7 @@ class TSmartEntity(CoordinatorEntity[TSmartCoordinator]):
                 (DOMAIN, self.device.device_id)
             },
             name=self.device.name,
-            manufacturer="Tesla Ltd.",
+            manufacturer="Tesla UK Ltd.",
             model="T-Smart",
             sw_version=self.device.firmware_version,
         )

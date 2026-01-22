@@ -6,8 +6,14 @@
 
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
-The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.  
+The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.
+
 Error and warning binary problem sensors (on when there's a problem) with attributes for error/warning codes are also provided for diagnostic purposes.
+
+Additional binary sensors for each error and warning are available but disabled by default.
+
+A synchronise time button is available if you use the inbuilt schedules and the time of the device drifts but you do not have your thermostat internet facing to time sync automatically, this is disabled by default.
+
 
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
@@ -15,7 +21,7 @@ This project is not endorsed by, directly affiliated with, maintained, authorize
 
 If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
-⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address, it is recommended to have it static if possible anyway to improve integration performance.
+⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
 ### HACS
 
