@@ -17,6 +17,11 @@ A synchronise time button is available if you use the inbuilt schedules and the 
 
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
+_Please :star: this repo if you find it useful_  
+_If you want to show your support please_
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
+
 ## Installation
 
 If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
