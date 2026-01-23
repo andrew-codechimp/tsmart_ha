@@ -64,6 +64,12 @@ After restarting Home Assistant:
 
 - By default the integration takes the average of both sensors within the thermostats, this can be changed by going into settings, configuring the thermostat and choosing a different temperature mode. For vertical thermostats the High setting will match the display and the app.
 
+## Screenshots
+
+![Device](https://raw.githubusercontent.com/andrew-codechimp/tsmart_ha/main/images/screenshot-device.png "Device")
+
+![Thermostat](https://raw.githubusercontent.com/andrew-codechimp/tsmart_ha/main/images/screenshot-thermostat.png "Thermostat")
+
 ## Compatible devices
 
 This integration works with all EUROICC water heaters.
