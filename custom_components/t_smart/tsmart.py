@@ -26,7 +26,7 @@ class TSmartMode(IntEnum):
     CRITICAL = 0x22
 
 
-@dataclass
+@dataclass(frozen=True, slots=True, kw_only=True)
 class TSmartConfiguration:
     device_id: str
     name: str
@@ -34,7 +34,7 @@ class TSmartConfiguration:
     firmware_version: str
 
 
-@dataclass
+@dataclass(frozen=True, slots=True, kw_only=True)
 class TSmartStatus:
     power: bool
     temperature_average: float
@@ -61,7 +61,7 @@ class TSmartStatus:
     w03_count: int
 
 
-@dataclass
+@dataclass(frozen=True, slots=True, kw_only=True)
 class DiscoveredDevice:
     ip: str
     device_id: str
@@ -155,7 +155,9 @@ class TSmart:
                         device_id_str = "%4X" % device_id
                         _LOGGER.info("Discovered %s %s" % (device_id_str, device_name))
                         devices[remote_addr[0]] = DiscoveredDevice(
-                            remote_addr[0], device_id_str, device_name
+                            ip=remote_addr[0],
+                            device_id=device_id_str,
+                            device_name=device_name,
                         )
                         if stop_on_first:
                             break
