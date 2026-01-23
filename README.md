@@ -8,16 +8,27 @@
 
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
-The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.  
+The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.
+
 Error and warning binary problem sensors (on when there's a problem) with attributes for error/warning codes are also provided for diagnostic purposes.
+
+Additional binary sensors for each error and warning are available but disabled by default.
+
+A synchronise time button is available if you use the inbuilt schedules and the time of the device drifts, but you do not have your thermostat internet facing to time sync automatically. This is disabled by default.
+
 
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
+_Please :star: this repo if you find it useful_  
+_If you want to show your support please_
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
+
 ## Installation
 
-⚠️ Your T-Smart thermostat must have a static IP address.
+If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
-If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. As this has moved to IP addresses rather than broadcast discovery on start you will need a fixed IP address on your thermostat and re-add it when changing to this integration.
+⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
 ### HACS
 
@@ -47,10 +58,9 @@ After restarting Home Assistant:
 
 - Find "T-Smart Thermostat" and click on it.
 
-- Click "OK" and any thermostats on your network should be discovered, or you can manually enter their IP address if not found.  
-  Thermostats must have a fixed IP address to avoid re-discovery.
+- Click "OK" and any thermostats on the same network should be discovered, or you can manually enter their IP address if not found.  
 
-- If your change the IP address of your thermostat you will have to modify this in the integration by going into settings/configure.
+- If your change the IP address of your thermostat the integration will try to rediscover it automatically at restart. If your thermostat is on a different network you will have to modify this in the integration by going into settings/configure.
 
 - By default the integration takes the average of both sensors within the thermostats, this can be changed by going into settings, configuring the thermostat and choosing a different temperature mode. For vertical thermostats the High setting will match the display and the app.
 

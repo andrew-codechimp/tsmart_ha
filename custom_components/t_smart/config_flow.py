@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
 )
 from homeassistant.core import callback
@@ -19,14 +20,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_TEMPERATURE_MODE,
     DOMAIN,
     TEMPERATURE_MODE_AVERAGE,
     TEMPERATURE_MODES,
 )
-from .tsmart import TSmart
+from .tsmart import DiscoveredDevice, TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Discover an unconfigured TSmart thermostat."""
         self.discovery_info = None
 
-        devices = await TSmart.async_discover()
+        devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         for device in devices:
             existing_entries = [
@@ -133,12 +133,12 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             async with asyncio.timeout(TIMEOUT):
-                await device.async_get_configuration()
+                configuration = await device.async_get_configuration()
         except TimeoutError:
             return "no_thermostat_found"
 
-        if device.device_id:
-            await self.async_set_unique_id(device.device_id)
+        if configuration:
+            await self.async_set_unique_id(configuration.device_id)
             self._abort_if_unique_id_configured()
         return None
 
@@ -154,16 +154,20 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 async with asyncio.timeout(TIMEOUT):
-                    await device.async_get_configuration()
+                    configuration = await device.async_get_configuration()
             except TimeoutError:
                 errors["base"] = "no_thermostat_found"
 
-            user_input[CONF_DEVICE_ID] = device.device_id
-            user_input[CONF_DEVICE_NAME] = device.name
+            if not configuration:
+                errors["base"] = "no_thermostat_found"
 
             # Save instance
-            if not errors:
-                return self.async_create_entry(title=device.device_id, data=user_input)
+            if configuration and not errors:
+                user_input[CONF_DEVICE_ID] = configuration.device_id
+                user_input[CONF_DEVICE_NAME] = configuration.name
+                return self.async_create_entry(
+                    title=configuration.device_id, data=user_input
+                )
 
         # no device specified, see if we can discover an unconfigured thermostat
         await self._discover()
@@ -220,13 +224,16 @@ class OptionsFlowHandler(OptionsFlow):
 
             try:
                 async with asyncio.timeout(TIMEOUT):
-                    await device.async_get_configuration()
+                    configuration = await device.async_get_configuration()
             except TimeoutError:
                 errors["base"] = "no_thermostat_found"
 
-            if not errors:
-                user_input[CONF_DEVICE_ID] = device.device_id
-                user_input[CONF_DEVICE_NAME] = device.name
+            if not configuration:
+                errors["base"] = "no_thermostat_found"
+
+            if configuration and not errors:
+                user_input[CONF_DEVICE_ID] = configuration.device_id
+                user_input[CONF_DEVICE_NAME] = configuration.name
 
                 errors = await self.save_options(user_input, schema)
                 if not errors:

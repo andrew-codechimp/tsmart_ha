@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 
+from .tsmart import TSmart
+
 if TYPE_CHECKING:
     from .coordinator import TSmartCoordinator
 
@@ -15,6 +17,7 @@ if TYPE_CHECKING:
 class TSmartData:
     """T-Smart data type."""
 
+    device: TSmart
     coordinator: TSmartCoordinator
 
 

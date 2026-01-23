@@ -1,0 +1,12 @@
+{
+    "entity": {
+        "button": {
+            "restart": {
+                "default": "mdi:restart"
+            },
+            "timesync": {
+                "default": "mdi:clock-check-outline"
+            }
+        }
+    }
+}
