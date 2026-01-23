@@ -157,7 +157,7 @@ class TSmart:
                         devices[remote_addr[0]] = DiscoveredDevice(
                             ip=remote_addr[0],
                             device_id=device_id_str,
-                            device_name=device_name,
+                            name=device_name,
                         )
                         if stop_on_first:
                             break
