@@ -163,7 +163,25 @@ class TSmartErrorBinarySensorEntity(TSmartEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, bool | int] | None:
         """Return the state attributes of the sensor."""
+        summary: str = ""
+        if self.coordinator.data.mode == TSmartMode.CRITICAL:
+            if self.coordinator.data.e01:
+                summary += "E01 - Broken sensors, "
+            if self.coordinator.data.e02:
+                summary += "E02 - Overheating, "
+            if self.coordinator.data.e03:
+                summary += "E03 - Dry heating, "
+            if self.coordinator.data.e04:
+                summary += "E04 - Serial Comm ST error, "
+            if self.coordinator.data.e05:
+                summary += "E05 - Serial Comm ESP error, "
+
+            summary = summary.rstrip(", ")
+        else:
+            summary = "No errors"
+
         attrs = {
+            "Summary": summary,
             "E01 - Broken sensors": self.coordinator.data.e01,
             "E01 - Count": self.coordinator.data.e01_count,
             "E02 - Overheating": self.coordinator.data.e02,
@@ -202,7 +220,21 @@ class TSmartWarningBinarySensorEntity(TSmartEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, bool | int] | None:
         """Return the state attributes of the sensor."""
+        summary: str = ""
+        if self.coordinator.data.mode == TSmartMode.LIMITED:
+            if self.coordinator.data.e01:
+                summary += "W01 - Bad High Sensor, "
+            if self.coordinator.data.e02:
+                summary += "W01 - Count, "
+            if self.coordinator.data.e03:
+                summary += "W03 - Long heating, "
+
+            summary = summary.rstrip(", ")
+        else:
+            summary = "No warnings"
+
         attrs = {
+            "Summary": summary,
             "W01 - Bad High Sensor": self.coordinator.data.w01,
             "W01 - Count": self.coordinator.data.w01_count,
             "W02 - Bad Low Sensor": self.coordinator.data.w02,
