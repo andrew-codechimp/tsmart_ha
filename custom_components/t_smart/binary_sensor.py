@@ -222,11 +222,11 @@ class TSmartWarningBinarySensorEntity(TSmartEntity, BinarySensorEntity):
         """Return the state attributes of the sensor."""
         summary: str = ""
         if self.coordinator.data.mode == TSmartMode.LIMITED:
-            if self.coordinator.data.e01:
+            if self.coordinator.data.w01:
                 summary += "W01 - Bad High Sensor, "
-            if self.coordinator.data.e02:
+            if self.coordinator.data.w02:
                 summary += "W01 - Count, "
-            if self.coordinator.data.e03:
+            if self.coordinator.data.w03:
                 summary += "W03 - Long heating, "
 
             summary = summary.rstrip(", ")
