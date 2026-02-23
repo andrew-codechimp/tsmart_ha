@@ -7,6 +7,19 @@
             "timesync": {
                 "default": "mdi:clock-check-outline"
             }
+        },
+        "climate": {
+            "thermostat": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "manual": "mdi:thermostat",
+                            "smart": "mdi:thermostat-auto",
+                            "timer": "mdi:clock-outline"
+                        }
+                    }
+                }
+            }
         }
     }
 }

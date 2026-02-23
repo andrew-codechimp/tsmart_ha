@@ -5,9 +5,9 @@ MIN_HA_VERSION = "2025.9"
 DOMAIN = "t_smart"
 DATA_DISCOVERY_SERVICE = "tsmart_discovery"
 
-PRESET_MANUAL = "Manual"
-PRESET_SMART = "Smart"
-PRESET_TIMER = "Timer"
+PRESET_MANUAL = "manual"
+PRESET_SMART = "smart"
+PRESET_TIMER = "timer"
 
 CONF_DEVICE_NAME = "device_name"
 CONF_TEMPERATURE_MODE = "temperature_mode"

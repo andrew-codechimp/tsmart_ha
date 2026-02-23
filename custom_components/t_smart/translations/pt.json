@@ -83,14 +83,32 @@
             "w03": {
                 "name": "W03 - Long Heating"
             }
-        }, "button": {
+        },
+        "button": {
             "restart": {
                 "name": "Reiniciar"
             },
             "timesync": {
                 "name": "Synchronise Time"
             }
-        }, "sensor": {
+        },
+        "climate": {
+            "thermostat": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "away": "Away",
+                            "boost": "Boost",
+                            "eco": "Eco",
+                            "manual": "Manual",
+                            "smart": "Smart",
+                            "timer": "Timer"
+                        }
+                    }
+                }
+            }
+        },
+        "sensor": {
             "current_temperature": {
                 "name": "Current Temperature"
             }

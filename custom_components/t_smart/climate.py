@@ -79,6 +79,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     )
     _attr_preset_modes = list(PRESET_MAP.keys())
     _attr_icon = "mdi:water-boiler"
+    _attr_translation_key = "thermostat"
     _attr_max_temp = 75
     _attr_min_temp = 10
     _attr_target_temperature_step = 5
