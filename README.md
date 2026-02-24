@@ -1,10 +1,10 @@
+# Tesla T-Smart thermostat Home Assistant integration
+
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![Downloads][download-latest-shield]](Downloads)
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]][hacs]
-
-# Tesla T-Smart thermostat Home Assistant integration
 
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
