@@ -104,9 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
         entry.data[CONF_DEVICE_NAME],
     )
 
-    temperature_mode = (
-        entry.data.get(CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE),
-    )
+    temperature_mode = entry.data.get(CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE)
 
     # Get device configuration before first refresh
     configuration = await device.async_get_configuration()
