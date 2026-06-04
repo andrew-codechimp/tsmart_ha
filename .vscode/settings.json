@@ -7,4 +7,7 @@
         "source.organizeImports": "always",
     },
     "python.terminal.activateEnvInCurrentTerminal": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
 }
