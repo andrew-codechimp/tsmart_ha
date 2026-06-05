@@ -113,6 +113,8 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
 
+        self._attr_hvac_mode = hvac_mode
+
         await self.device.async_control_set(
             hvac_mode == HVACMode.HEAT,
             PRESET_MAP[self.preset_mode],
@@ -144,6 +146,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
             self._attr_target_temperature = temperature
 
         hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
+        self._attr_hvac_mode = hvac_mode
 
         if temperature:
             await self.device.async_control_set(
@@ -166,6 +169,8 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set the preset mode."""
+        self._attr_preset_mode = preset_mode
+
         await self.device.async_control_set(
             self.hvac_mode == HVACMode.HEAT,
             PRESET_MAP[preset_mode],
