@@ -51,7 +51,11 @@
     "entity": {
         "binary_sensor": {
             "anti_legionella": {
-                "name": "Anti-Legionella"
+                "name": "Anti-Legionella",
+                "state": {
+                    "on": "Running",
+                    "off": "Idle"
+                }
             },
             "relay": {
                 "name": "Relay"
