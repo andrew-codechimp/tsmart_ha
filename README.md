@@ -11,6 +11,8 @@ The integration provides a climate control with preset modes, current temperatur
 
 Error and warning binary problem sensors (on when there's a problem) with attributes for error/warning codes are also provided for diagnostic purposes.
 
+An Anti-Legionella diagnostic sensor shows when the automatic anti-legionella cycle is active. Anti-Legionella cannot be disabled; it runs on the device automatically when your water temperature has not been sufficient to kill the bacteria, provided the T-Smart is not off.
+
 Additional binary sensors for each error and warning are available but disabled by default.
 
 A synchronise time button is available if you use the inbuilt schedules and the time of the device drifts, but you do not have your thermostat internet facing to time sync automatically. This is disabled by default.
