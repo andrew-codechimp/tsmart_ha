@@ -3,15 +3,23 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP Address",
-                    "temperature_mode": "Temperature Mode"
+                    "ip_address": "IP address",
+                    "temperature_mode": "Temperature mode"
+                },
+                "data_description": {
+                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address if possible to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
+                    "temperature_mode": "Select the temperature mode for the thermostat."
                 }
             },
             "edit": {
                 "title": "Edit connection information",
                 "data": {
-                    "ip_address": "IP Address",
-                    "temperature_mode": "Temperature Mode"
+                    "ip_address": "IP address",
+                    "temperature_mode": "Temperature mode"
+                },
+                "data_description": {
+                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address if possible to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
+                    "temperature_mode": "Select the temperature mode for the thermostat."
                 }
             },
             "confirm": {
@@ -30,8 +38,12 @@
         "step": {
             "init": {
                 "data": {
-                    "ip_address": "IP Address",
-                    "temperature_mode": "Temperature Mode"
+                    "ip_address": "IP address",
+                    "temperature_mode": "Temperature mode"
+                },
+                "data_description": {
+                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address if possible to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
+                    "temperature_mode": "Select the temperature mode for the thermostat."
                 }
             }
         },
@@ -51,7 +63,7 @@
     "entity": {
         "binary_sensor": {
             "anti_legionella": {
-                "name": "Anti-Legionella",
+                "name": "Anti-legionella",
                 "state": {
                     "on": "Running",
                     "off": "Idle"
@@ -67,28 +79,28 @@
                 "name": "Warning"
             },
             "e01": {
-                "name": "E01 - Broken Sensors"
+                "name": "E01 - Broken sensors"
             },
             "e02": {
                 "name": "E02 - Overheating"
             },
             "e03": {
-                "name": "E03 - Dry Heating"
+                "name": "E03 - Dry heating"
             },
             "e04": {
-                "name": "E04 - Serial Comm ST Error"
+                "name": "E04 - Serial comm ST error"
             },
             "e05": {
-                "name": "E05 - Serial Comm ESP Error"
+                "name": "E05 - Serial comm ESP error"
             },
             "w01": {
-                "name": "W01 - Bad High Sensor"
+                "name": "W01 - Bad high sensor"
             },
             "w02": {
-                "name": "W02 - Bad Low Sensor"
+                "name": "W02 - Bad low sensor"
             },
             "w03": {
-                "name": "W03 - Long Heating"
+                "name": "W03 - Long heating"
             }
         },
         "button": {
@@ -96,7 +108,7 @@
                 "name": "Restart"
             },
             "timesync": {
-                "name": "Synchronise Time"
+                "name": "Synchronise time"
             }
         },
         "climate": {
@@ -117,7 +129,7 @@
         },
         "sensor": {
             "current_temperature": {
-                "name": "Current Temperature"
+                "name": "Current temperature"
             }
         }
     }

@@ -11,7 +11,7 @@ The integration provides a climate control with preset modes, current temperatur
 
 Error and warning binary problem sensors (on when there's a problem) with attributes for error/warning codes are also provided for diagnostic purposes.
 
-An Anti-Legionella diagnostic sensor shows when the automatic anti-legionella cycle is running. Anti-Legionella cannot be disabled; it runs on the device automatically when your water temperature has not been sufficient to kill the bacteria, provided the T-Smart is not off.
+An Anti-legionella diagnostic sensor shows when the automatic anti-legionella cycle is running. Anti-legionella cannot be disabled; it runs on the device automatically when your water temperature has not been sufficient to kill the bacteria, provided the T-Smart is not off.
 
 Additional binary sensors for each error and warning are available but disabled by default.
 
