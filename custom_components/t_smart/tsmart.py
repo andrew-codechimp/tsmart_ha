@@ -24,6 +24,7 @@ class TSmartMode(IntEnum):
     BOOST = 0x05
     LIMITED = 0x21
     CRITICAL = 0x22
+    ANTI_LEGIONELLA = 0x23
     UNKNOWN = -1
 
     @classmethod
@@ -176,6 +177,7 @@ class TSmart:
                 break
 
         stream.close()
+        sock.close()
 
         return devices.values()
 
@@ -234,6 +236,7 @@ class TSmart:
             break
 
         stream.close()
+        sock.close()
 
         if data is None:
             _LOGGER.warning("Timed-out fetching status from %s" % self.ip)

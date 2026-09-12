@@ -50,6 +50,9 @@
     },
     "entity": {
         "binary_sensor": {
+            "anti_legionella": {
+                "name": "Anti-Legionella"
+            },
             "relay": {
                 "name": "Relay"
             },

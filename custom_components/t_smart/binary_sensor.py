@@ -116,6 +116,7 @@ async def async_setup_entry(
         TSmartRelayBinarySensorEntity(coordinator),
         TSmartErrorBinarySensorEntity(coordinator),
         TSmartWarningBinarySensorEntity(coordinator),
+        TSmartAntiLegionellaBinarySensorEntity(coordinator),
     ]
 
     entities.extend(
@@ -247,6 +248,23 @@ class TSmartWarningBinarySensorEntity(TSmartEntity, BinarySensorEntity):
         if super_attrs:
             attrs.update(super_attrs)
         return attrs
+
+
+class TSmartAntiLegionellaBinarySensorEntity(TSmartEntity, BinarySensorEntity):
+    """t_smart Anti-Legionella Sensor class."""
+
+    _attr_translation_key = "anti_legionella"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.device.device_id}_anti_legionella"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if anti-legionella mode is active."""
+        return self.coordinator.data.mode == TSmartMode.ANTI_LEGIONELLA
 
 
 class TSmartBinarySensorEntity(TSmartEntity, BinarySensorEntity):
