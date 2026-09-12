@@ -24,6 +24,14 @@ class TSmartMode(IntEnum):
     BOOST = 0x05
     LIMITED = 0x21
     CRITICAL = 0x22
+    ANTI_LEGIONELLA = 0x23
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, _value: object) -> "TSmartMode":
+        """Handle unknown modes."""
+        _LOGGER.error("Unknown T-Smart mode received: %s", _value)
+        return cls.UNKNOWN
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -169,6 +177,7 @@ class TSmart:
                 break
 
         stream.close()
+        sock.close()
 
         return devices.values()
 
@@ -227,6 +236,7 @@ class TSmart:
             break
 
         stream.close()
+        sock.close()
 
         if data is None:
             _LOGGER.warning("Timed-out fetching status from %s" % self.ip)

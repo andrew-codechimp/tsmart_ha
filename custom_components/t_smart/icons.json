@@ -8,6 +8,11 @@
                 "default": "mdi:clock-check-outline"
             }
         },
+        "binary_sensor": {
+            "anti_legionella": {
+                "default": "mdi:bacteria"
+            }
+        },
         "climate": {
             "thermostat": {
                 "state_attributes": {

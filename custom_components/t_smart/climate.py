@@ -117,7 +117,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
 
         await self.device.async_control_set(
             hvac_mode == HVACMode.HEAT,
-            PRESET_MAP[self.preset_mode],
+            PRESET_MAP.get(self.preset_mode, TSmartMode.MANUAL),
             self.target_temperature,
         )
 
@@ -151,7 +151,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         if temperature:
             await self.device.async_control_set(
                 hvac_mode == HVACMode.HEAT,
-                PRESET_MAP[self.preset_mode],
+                PRESET_MAP.get(self.preset_mode, TSmartMode.MANUAL),
                 temperature,
             )
             await asyncio.sleep(AFTER_SET_SLEEP)
