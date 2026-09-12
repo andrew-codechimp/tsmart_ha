@@ -12,10 +12,10 @@ classifiers = [
   "Framework :: AsyncIO",
   "Intended Audience :: Developers",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3",
 ]
-requires-python = "==3.13.2"
+requires-python = "==3.14.2"
 dependencies = [] # Use dev for all dependencies
 
 [project.urls]
@@ -30,7 +30,7 @@ dev = [
     "asyncio-dgram",
     "awesomeversion",
     "colorlog",
-    "homeassistant==2025.9.0",
+    "homeassistant==2026.4.0",
     "mypy",
     "ruff",
     "voluptuous",
@@ -42,7 +42,7 @@ override-dependencies = [
     "aiodns==3.2.0",
 ]
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 src = ["custom_components/t_smart"]
 
 [tool.ruff.format]
@@ -151,7 +151,7 @@ voluptuous = "vol"
 # Specify the target platform details in config, so your developers are
 # free to run mypy on Windows, Linux, or macOS and get consistent
 # results.
-python_version = "3.13"
+python_version = "3.14"
 platform = "linux"
 
 # show error messages from unrelated files

@@ -28,7 +28,7 @@ class TSmartMode(IntEnum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls, _value: object) -> "TSmartMode":
+    def _missing_(cls, _value: object) -> TSmartMode:
         """Handle unknown modes."""
         _LOGGER.error("Unknown T-Smart mode received: %s", _value)
         return cls.UNKNOWN
