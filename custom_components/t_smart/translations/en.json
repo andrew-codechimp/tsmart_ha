@@ -30,8 +30,9 @@
             "no_thermostat_found": "No thermostat found."
         },
         "abort": {
-            "no_devices_found": "No devices found on the network.",
-            "already_configures": "Already configured."
+            "no_devices_found": "No devices found on the network",
+            "reconfigure_successful": "Reconfiguration was successful",
+            "already_configures": "Already configured"
         }
     },
     "options": {
