@@ -89,6 +89,7 @@ class TSmart:
         self.ip = ip
         self.device_id = device_id
         self.name = name
+        self._request_lock = asyncio.Lock()
 
     async def async_discover(
         stop_on_first=False, tries=2, timeout=2
@@ -182,6 +183,10 @@ class TSmart:
         return devices.values()
 
     async def _async_request(self, request, response_struct):
+        async with self._request_lock:
+            return await self._async_request_unlocked(request, response_struct)
+
+    async def _async_request_unlocked(self, request, response_struct):
         self.request_successful = False
 
         t = 0
@@ -192,58 +197,64 @@ class TSmart:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(("", 1337))
-        sock.connect((self.ip, UDP_PORT))
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("", 1337))
+            sock.connect((self.ip, UDP_PORT))
 
-        stream = await asyncio_dgram.from_socket(sock)
-
-        data = None
-        for i in range(2):
-            await stream.send(request)
-
-            _LOGGER.info("Message sent to %s" % self.ip)
-
+            stream = await asyncio_dgram.from_socket(sock)
             try:
-                data, remote_addr = await asyncio.wait_for(stream.recv(), 2)
-                if len(data) != response_struct.size:
-                    _LOGGER.warning(
-                        "Unexpected packet length (got: %d, expected: %d)"
-                        % (len(data), response_struct.size)
-                    )
-                    continue
+                data = None
+                for i in range(2):
+                    await stream.send(request)
 
-                if data[0] == 0:
-                    _LOGGER.warning("Got error response (code %d)" % (data[0]))
-                    continue
+                    _LOGGER.info("Message sent to %s" % self.ip)
 
-                if data[0] != request[0] or data[1] != data[1] or data[2] != data[2]:
-                    _LOGGER.warning(
-                        "Unexpected response type (%02X %02X %02X)"
-                        % (data[0], data[1], data[2])
-                    )
-                    continue
+                    try:
+                        data, remote_addr = await asyncio.wait_for(stream.recv(), 2)
+                        if len(data) != response_struct.size:
+                            _LOGGER.warning(
+                                "Unexpected packet length (got: %d, expected: %d)"
+                                % (len(data), response_struct.size)
+                            )
+                            continue
 
-                t = 0
-                for b in data[:-1]:
-                    t = t ^ b
-                if t ^ 0x55 != data[-1]:
-                    _LOGGER.warning("Received packet checksum failed")
+                        if data[0] == 0:
+                            _LOGGER.warning("Got error response (code %d)" % (data[0]))
+                            continue
 
-            except asyncio.exceptions.TimeoutError:
-                continue
+                        if (
+                            data[0] != request[0]
+                            or data[1] != data[1]
+                            or data[2] != data[2]
+                        ):
+                            _LOGGER.warning(
+                                "Unexpected response type (%02X %02X %02X)"
+                                % (data[0], data[1], data[2])
+                            )
+                            continue
 
-            break
+                        t = 0
+                        for b in data[:-1]:
+                            t = t ^ b
+                        if t ^ 0x55 != data[-1]:
+                            _LOGGER.warning("Received packet checksum failed")
 
-        stream.close()
-        sock.close()
+                    except asyncio.exceptions.TimeoutError:
+                        continue
 
-        if data is None:
-            _LOGGER.warning("Timed-out fetching status from %s" % self.ip)
-            return None
+                    break
 
-        self.request_successful = True
-        return data
+                if data is None:
+                    _LOGGER.warning("Timed-out fetching status from %s" % self.ip)
+                    return None
+
+                self.request_successful = True
+                return data
+            finally:
+                stream.close()
+        finally:
+            sock.close()
 
     async def async_get_configuration(self) -> TSmartConfiguration | None:
         request = struct.pack("=BBBB", 0x21, 0, 0, 0)
