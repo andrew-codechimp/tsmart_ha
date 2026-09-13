@@ -30,21 +30,19 @@ from .tsmart import DiscoveredDevice, TSmart
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(
-            CONF_TEMPERATURE_MODE,
-            default=TEMPERATURE_MODE_AVERAGE,
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=TEMPERATURE_MODES,
-                translation_key="temperature_mode",
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            ),
+STEP_USER_DATA_SCHEMA = vol.Schema({
+    vol.Required(CONF_IP_ADDRESS): str,
+    vol.Required(
+        CONF_TEMPERATURE_MODE,
+        default=TEMPERATURE_MODE_AVERAGE,
+    ): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=TEMPERATURE_MODES,
+            translation_key="temperature_mode",
+            mode=selector.SelectSelectorMode.DROPDOWN,
         ),
-    }
-)
+    ),
+})
 
 CONFIG_VERSION = 2
 
@@ -55,24 +53,22 @@ def _base_schema(discovery_info=None) -> vol.Schema:
     """Generate base schema."""
     base_schema = {}
     if discovery_info and CONF_IP_ADDRESS in discovery_info:
-        base_schema.update(
-            {
-                vol.Required(
-                    CONF_IP_ADDRESS,
-                    description={"suggested_value": discovery_info[CONF_IP_ADDRESS]},
-                ): str,
-                vol.Required(
-                    CONF_TEMPERATURE_MODE,
-                    default=TEMPERATURE_MODE_AVERAGE,
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=TEMPERATURE_MODES,
-                        translation_key="temperature_mode",
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    ),
+        base_schema.update({
+            vol.Required(
+                CONF_IP_ADDRESS,
+                description={"suggested_value": discovery_info[CONF_IP_ADDRESS]},
+            ): str,
+            vol.Required(
+                CONF_TEMPERATURE_MODE,
+                default=TEMPERATURE_MODE_AVERAGE,
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=TEMPERATURE_MODES,
+                    translation_key="temperature_mode",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
                 ),
-            }
-        )
+            ),
+        })
     else:
         base_schema.update({vol.Required(CONF_IP_ADDRESS): str})
 
@@ -91,7 +87,7 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(_config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -275,20 +271,18 @@ class OptionsFlowHandler(OptionsFlow):
 
     def build_options_schema(self) -> vol.Schema:
         """Build the options schema."""
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
+        data_schema = vol.Schema({
+            vol.Required(CONF_IP_ADDRESS): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
+            ),
+            vol.Required(CONF_TEMPERATURE_MODE): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=TEMPERATURE_MODES,
+                    translation_key="temperature_mode",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
                 ),
-                vol.Required(CONF_TEMPERATURE_MODE): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=TEMPERATURE_MODES,
-                        translation_key="temperature_mode",
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    ),
-                ),
-            }
-        )
+            ),
+        })
 
         return _fill_schema_defaults(
             data_schema,

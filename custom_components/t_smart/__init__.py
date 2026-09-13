@@ -40,7 +40,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(_hass: HomeAssistant, _config: ConfigType) -> bool:
     """Integration setup."""
 
     if AwesomeVersion(HA_VERSION) < AwesomeVersion(MIN_HA_VERSION):  # pragma: no cover
@@ -115,9 +115,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
         discovered_devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         if not discovered_devices:
-            raise ConfigEntryNotReady(
-                f"Timeout connecting to device {device.name} on {device.ip}"
-            )
+            message = f"Timeout connecting to device {device.name} on {device.ip}"
+            raise ConfigEntryNotReady(message)
 
         for discovered_device in discovered_devices:
             if device.device_id == entry.data[CONF_DEVICE_ID]:
@@ -134,7 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
                 break
 
     if not configuration:
-        raise ConfigEntryNotReady(f"Unable to connect to {device.ip}")
+        message = f"Unable to connect to {device.ip}"
+        raise ConfigEntryNotReady(message)
 
     coordinator = TSmartCoordinator(
         hass=hass, config_entry=entry, device=device, temperature_mode=temperature_mode
@@ -143,7 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
     if coordinator.device.request_successful is False:
-        raise ConfigEntryNotReady(f"Unable to connect to {coordinator.device.ip}")
+        message = f"Unable to connect to {coordinator.device.ip}"
+        raise ConfigEntryNotReady(message)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
