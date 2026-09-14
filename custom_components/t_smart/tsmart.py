@@ -5,8 +5,10 @@ import struct
 import time
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import cast
 
 import asyncio_dgram
+from asyncio_dgram.aio import DatagramClient, DatagramServer
 
 UDP_PORT = 1337
 TIMEOUT = 2
@@ -27,7 +29,7 @@ def _is_valid_checksum(message: bytes) -> bool:
 
 
 def _is_valid_response(
-    data: bytes, request: bytearray, response_struct: struct.Struct
+    data: bytes, request: bytes | bytearray, response_struct: struct.Struct
 ) -> bool:
     """Return whether a response matches the request and has a valid checksum."""
     if len(data) != response_struct.size:
@@ -156,7 +158,10 @@ class TSmart:
         self._request_lock = asyncio.Lock()
 
     @staticmethod
-    async def async_discover(stop_on_first=False, tries=2) -> list[DiscoveredDevice]:
+    async def async_discover(
+        stop_on_first: bool = False,  # noqa: FBT001
+        tries: int = 2,
+    ) -> list[DiscoveredDevice]:
         await _UDP_LOCK.acquire()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
@@ -165,7 +170,7 @@ class TSmart:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(("", 1337))
 
-            stream = await asyncio_dgram.from_socket(sock)
+            stream = cast(DatagramServer, await asyncio_dgram.from_socket(sock))
             response_struct = struct.Struct("=BBBHL32sBB")
 
             devices: dict[str, DiscoveredDevice] = {}
@@ -214,9 +219,10 @@ class TSmart:
                             data = None
                             continue
 
-                        _LOGGER.info("Got response from %s", remote_addr[0])
+                        remote_ip = cast(tuple[str, int], remote_addr)[0]
+                        _LOGGER.info("Got response from %s", remote_ip)
 
-                        if remote_addr[0] not in devices:
+                        if remote_ip not in devices:
                             (
                                 _cmd,
                                 _sub,
@@ -230,8 +236,8 @@ class TSmart:
                             device_name = name.decode("utf-8").split("\x00")[0]
                             device_id_str = f"{device_id:4X}"
                             _LOGGER.info("Discovered %s %s", device_id_str, device_name)
-                            devices[remote_addr[0]] = DiscoveredDevice(
-                                ip_address=remote_addr[0],
+                            devices[remote_ip] = DiscoveredDevice(
+                                ip_address=remote_ip,
                                 device_id=device_id_str,
                                 name=device_name,
                             )
@@ -245,23 +251,27 @@ class TSmart:
                     break
 
             stream.close()
-            return devices.values()
+            return list(devices.values())
         finally:
             sock.close()
             _UDP_LOCK.release()
 
-    async def _async_request(self, request, response_struct):
+    async def _async_request(
+        self, request: bytes, response_struct: struct.Struct
+    ) -> bytes | None:
         async with self._request_lock, _UDP_LOCK:
             return await self._async_request_unlocked(request, response_struct)
 
-    async def _async_request_unlocked(self, request, response_struct):
+    async def _async_request_unlocked(
+        self, request: bytes, response_struct: struct.Struct
+    ) -> bytes | None:
         self.request_successful = False
 
         t = 0
-        request = bytearray(request)
-        for b in request[:-1]:
+        request_data = bytearray(request)
+        for b in request_data[:-1]:
             t = t ^ b
-        request[-1] = t ^ 0x55
+        request_data[-1] = t ^ 0x55
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
@@ -270,25 +280,28 @@ class TSmart:
             sock.bind(("", 1337))
             sock.connect((self.ip_address, UDP_PORT))
 
-            stream = await asyncio_dgram.from_socket(sock)
+            stream = cast(DatagramClient, await asyncio_dgram.from_socket(sock))
             try:
                 data = None
                 for _i in range(2):
                     data = None
                     timed_out = False
-                    await stream.send(request)
+                    try:
+                        await stream.send(bytes(request_data))
+                    except ConnectionRefusedError:
+                        _LOGGER.warning("Connection refused by %s", self.ip_address)
+                        raise
 
                     _LOGGER.info("Message sent to %s", self.ip_address)
 
                     try:
                         async with asyncio.timeout(TIMEOUT):
                             data, _remote_addr = await stream.recv()
-                        if not _is_valid_response(data, request, response_struct):
+                        if not _is_valid_response(data, request_data, response_struct):
                             data = None
                             continue
 
                     except ConnectionRefusedError:
-                        _LOGGER.warning("Connection refused by %s", self.ip_address)
                         raise
                     except asyncio.exceptions.TimeoutError:
                         timed_out = True
@@ -364,6 +377,9 @@ class TSmart:
         response_struct = struct.Struct("=BBBBHBHBBH16sB")
         try:
             response = await self._async_request(request, response_struct)
+        except ConnectionRefusedError:
+            _LOGGER.warning("Connection refused by %s", self.ip_address)
+            return None
         except TimeoutError:
             _LOGGER.warning("Timeout trying to fetch status from %s", self.ip_address)
             return None
@@ -426,7 +442,12 @@ class TSmart:
         _LOGGER.info("Received status from %s", self.ip_address)
         return status
 
-    async def async_control_set(self, power, mode, setpoint) -> None:
+    async def async_control_set(
+        self,
+        power: bool,  # noqa: FBT001
+        mode: TSmartMode,
+        setpoint: float,
+    ) -> None:
         _LOGGER.info("Async control set %d %d %0.2f", power, mode, setpoint)
 
         if mode < 0 or mode > 5:

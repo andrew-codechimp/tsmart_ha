@@ -94,12 +94,12 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         return str(self.device.device_id)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Get the current mode."""
         return HVACMode.HEAT if self.coordinator.data.power else HVACMode.OFF
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Get the current action."""
         if self.coordinator.data.power:
             if self.coordinator.data.relay:
@@ -107,7 +107,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
             return HVACAction.IDLE
         return HVACAction.OFF
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
 
         if hvac_mode not in self._attr_hvac_modes:
@@ -118,7 +118,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
 
         await self.device.async_control_set(
             hvac_mode == HVACMode.HEAT,
-            PRESET_MAP.get(self.preset_mode, TSmartMode.MANUAL),
+            PRESET_MAP.get(self.preset_mode or PRESET_MANUAL, TSmartMode.MANUAL),
             self.target_temperature,
         )
 
@@ -126,7 +126,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Get the current temperature."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
             return self.coordinator.data.temperature_high
@@ -137,11 +137,11 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         return self.coordinator.data.temperature_average
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Get the target temperature."""
         return self.coordinator.data.setpoint
 
-    async def async_set_temperature(self, **kwargs: Any):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if temperature := kwargs.get(ATTR_TEMPERATURE):
             self._attr_target_temperature = temperature
@@ -152,7 +152,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         if temperature:
             await self.device.async_control_set(
                 hvac_mode == HVACMode.HEAT,
-                PRESET_MAP.get(self.preset_mode, TSmartMode.MANUAL),
+                PRESET_MAP.get(self.preset_mode or PRESET_MANUAL, TSmartMode.MANUAL),
                 temperature,
             )
             await asyncio.sleep(AFTER_SET_SLEEP)
@@ -162,13 +162,13 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the preset mode."""
         return next(
             (k for k, v in PRESET_MAP.items() if v == self.coordinator.data.mode), None
         )
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         self._attr_preset_mode = preset_mode
 
@@ -181,7 +181,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return the state attributes of the immersion heater."""
 
         # Temperature related attributes

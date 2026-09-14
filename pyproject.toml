@@ -150,17 +150,6 @@ warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
-# TODO: Fix these ignored errors
-disable_error_code = [
-    "no-untyped-def",
-    "assignment",
-    "call-arg",
-    "arg-type",
-    "index",
-    "override",
-    "return-value",
-]
-
 # Files to check
 files = ["custom_components/t_smart"]
 

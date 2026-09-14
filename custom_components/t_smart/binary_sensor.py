@@ -1,7 +1,8 @@
 """Binary Sensor platform for t_smart."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,6 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import TSmartConfigEntry
+from .coordinator import TSmartCoordinator
 from .entity import TSmartEntity
 from .tsmart import TSmartMode, TSmartStatus
 
@@ -162,7 +164,7 @@ class TSmartErrorBinarySensorEntity(TSmartEntity, BinarySensorEntity):
         return self.coordinator.data.mode == TSmartMode.CRITICAL
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool | int] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the sensor."""
         summary: str = ""
         if self.coordinator.data.mode == TSmartMode.CRITICAL:
@@ -219,7 +221,7 @@ class TSmartWarningBinarySensorEntity(TSmartEntity, BinarySensorEntity):
         return self.coordinator.data.mode == TSmartMode.LIMITED
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool | int] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the sensor."""
         summary: str = ""
         if self.coordinator.data.mode == TSmartMode.LIMITED:
@@ -274,7 +276,7 @@ class TSmartBinarySensorEntity(TSmartEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: TSmartCoordinator,
         description: TSmartBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
@@ -292,7 +294,7 @@ class TSmartBinarySensorEntity(TSmartEntity, BinarySensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self) -> dict[str, int] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self.entity_description.count_fn is None:
             return super().extra_state_attributes

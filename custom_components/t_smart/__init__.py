@@ -122,7 +122,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
     )
 
     # Get device configuration before first refresh
-    configuration = await device.async_get_configuration()
+    try:
+        configuration = await device.async_get_configuration()
+    except ConnectionRefusedError:
+        message = f"Connection refused by device {device.name} on {device.ip_address}"
+        raise ConfigEntryNotReady(message) from None
     if not configuration:
         # Attempt discovery on timeout
         discovered_devices: list[DiscoveredDevice] = await TSmart.async_discover()
@@ -144,7 +148,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
                     device.ip_address,
                 )
                 device.ip_address = discovered_device.ip_address
-                configuration = await device.async_get_configuration()
+                try:
+                    configuration = await device.async_get_configuration()
+                except ConnectionRefusedError:
+                    message = (
+                        f"Connection refused by device {device.name} "
+                        f"on {device.ip_address}"
+                    )
+                    raise ConfigEntryNotReady(message) from None
                 break
 
     if not configuration:
