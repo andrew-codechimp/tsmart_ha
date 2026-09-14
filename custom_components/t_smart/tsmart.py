@@ -210,7 +210,7 @@ class TSmart:
                             continue
 
                         if not _is_valid_checksum(data):
-                            _LOGGER.warning("Received discover packetchecksum failed")
+                            _LOGGER.warning("Received discover packet checksum failed")
                             data = None
                             continue
 
