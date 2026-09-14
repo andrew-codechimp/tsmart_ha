@@ -100,7 +100,7 @@ class TSmartStatus:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DiscoveredDevice:
-    ip: str
+    ip_address: str
     device_id: str
     name: str
 
@@ -108,14 +108,16 @@ class DiscoveredDevice:
 class TSmart:
     """Representation of a T-Smart device."""
 
-    ip: str
+    ip_address: str
     device_id: str | None = None
     name: str | None = None
     firmware_name: str = ""
     firmware_version: str = ""
 
-    def __init__(self, ip: str, device_id: str | None = None, name: str | None = None):
-        self.ip = ip
+    def __init__(
+        self, ip_address: str, device_id: str | None = None, name: str | None = None
+    ):
+        self.ip_address = ip_address
         self.device_id = device_id
         self.name = name
         self._request_lock = asyncio.Lock()
@@ -194,7 +196,7 @@ class TSmart:
                         device_id_str = f"{device_id:4X}"
                         _LOGGER.info("Discovered %s %s", device_id_str, device_name)
                         devices[remote_addr[0]] = DiscoveredDevice(
-                            ip=remote_addr[0],
+                            ip_address=remote_addr[0],
                             device_id=device_id_str,
                             name=device_name,
                         )
@@ -230,16 +232,17 @@ class TSmart:
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(("", 1337))
-            sock.connect((self.ip, UDP_PORT))
+            sock.connect((self.ip_address, UDP_PORT))
 
             stream = await asyncio_dgram.from_socket(sock)
             try:
                 data = None
                 for _i in range(2):
                     data = None
+                    timed_out = False
                     await stream.send(request)
 
-                    _LOGGER.info("Message sent to %s", self.ip)
+                    _LOGGER.info("Message sent to %s", self.ip_address)
 
                     try:
                         async with asyncio.timeout(TIMEOUT):
@@ -275,13 +278,20 @@ class TSmart:
                             continue
 
                     except asyncio.exceptions.TimeoutError:
-                        _LOGGER.warning("Time-out fetching response from %s", self.ip)
+                        timed_out = True
+                        _LOGGER.warning(
+                            "Time-out fetching response from %s", self.ip_address
+                        )
                         continue
 
                     break
 
                 if data is None:
-                    _LOGGER.warning("No valid response received from %s", self.ip)
+                    if timed_out:
+                        raise TimeoutError
+                    _LOGGER.warning(
+                        "No valid response received from %s", self.ip_address
+                    )
                     return None
 
                 self.request_successful = True
@@ -331,7 +341,7 @@ class TSmart:
             firmware_version=self.firmware_version,
         )
 
-        _LOGGER.info("Received configuration from %s", self.ip)
+        _LOGGER.info("Received configuration from %s", self.ip_address)
 
         return configuration
 
@@ -339,7 +349,11 @@ class TSmart:
         request = struct.pack("=BBBB", 0xF1, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBBHBHBBH16sB")
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning("Timeout trying to fetch status from %s", self.ip_address)
+            return None
 
         if response is None:
             return None
@@ -396,7 +410,7 @@ class TSmart:
             smart_state=TSmartSmartState(smart_state),
         )
 
-        _LOGGER.info("Received status from %s", self.ip)
+        _LOGGER.info("Received status from %s", self.ip_address)
         return status
 
     async def async_control_set(self, power, mode, setpoint) -> None:
@@ -411,9 +425,13 @@ class TSmart:
         )
 
         response_struct = struct.Struct("=BBBB")
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning("Timeout trying to set control on %s", self.ip_address)
+            return
         if response:
-            _LOGGER.info("Control command acknowledged by %s", self.ip)
+            _LOGGER.info("Control command acknowledged by %s", self.ip_address)
 
     async def async_restart(self, offset_ms: int = 1000) -> None:
         """Restart the device after specified offset time in milliseconds."""
@@ -421,7 +439,7 @@ class TSmart:
             message = "Offset must be between 100ms and 10000ms"
             raise ValueError(message)
 
-        _LOGGER.info("Restarting device %s after %dms", self.ip, offset_ms)
+        _LOGGER.info("Restarting device %s after %dms", self.ip_address, offset_ms)
 
         # Split offset into low and high bytes for sub-command
         sub = offset_ms & 0xFF  # Low byte
@@ -431,45 +449,65 @@ class TSmart:
 
         response_struct = struct.Struct("=BBBB")
         # Device may not respond if offset is very short
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning("Timeout trying to restart %s", self.ip_address)
+            return
         if response:
-            _LOGGER.info("Restart command acknowledged by %s", self.ip)
+            _LOGGER.info("Restart command acknowledged by %s", self.ip_address)
 
     async def async_timesync(self) -> None:
         """Set the device time using UTC timestamp in milliseconds."""
         timestamp_ms = int(time.time() * 1000)
 
-        _LOGGER.info("Setting time on device %s to %d", self.ip, timestamp_ms)
+        _LOGGER.info("Setting time on device %s to %d", self.ip_address, timestamp_ms)
 
         request = struct.pack("=BBBIB", 0x03, 0, 0, timestamp_ms, 0)
 
         response_struct = struct.Struct("=BBBB")
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Timeout trying to synchronize time with %s", self.ip_address
+            )
+            return
         if response:
-            _LOGGER.info("Time set command acknowledged by %s", self.ip)
+            _LOGGER.info("Time set command acknowledged by %s", self.ip_address)
 
     async def async_smart_reset(self) -> None:
         """Clear the smart data stored on the device."""
-        _LOGGER.info("Resetting smart data on device %s", self.ip)
+        _LOGGER.info("Resetting smart data on device %s", self.ip_address)
 
         request = struct.pack("=BBBB", 0xFA, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBB")
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning("Timeout trying to reset smart data on %s", self.ip_address)
+            return
         if response:
-            _LOGGER.info("Smart reset command acknowledged by %s", self.ip)
+            _LOGGER.info("Smart reset command acknowledged by %s", self.ip_address)
 
     async def async_get_smart_time(self) -> int | None:
         """Get the remaining smart recording time in UTC seconds."""
         request = struct.pack("=BBBB", 0xFB, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBIB")
-        response = await self._async_request(request, response_struct)
+        try:
+            response = await self._async_request(request, response_struct)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Timeout trying to fetch smart time from %s", self.ip_address
+            )
+            return None
 
         if response is None:
             return None
 
         (_cmd, _sub, _sub2, smart_time, _checksum) = response_struct.unpack(response)
         smart_time = int(smart_time)
-        _LOGGER.info("Received smart time %d from %s", smart_time, self.ip)
+        _LOGGER.info("Received smart time %d from %s", smart_time, self.ip_address)
         return smart_time

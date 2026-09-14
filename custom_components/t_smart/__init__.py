@@ -115,25 +115,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
         discovered_devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         if not discovered_devices:
-            message = f"Timeout connecting to device {device.name} on {device.ip}"
+            message = (
+                f"Timeout connecting to device {device.name} on {device.ip_address}"
+            )
             raise ConfigEntryNotReady(message)
 
         for discovered_device in discovered_devices:
             if device.device_id == entry.data[CONF_DEVICE_ID]:
                 new_data = entry.data.copy()
-                new_data[CONF_IP_ADDRESS] = discovered_device.ip
+                new_data[CONF_IP_ADDRESS] = discovered_device.ip_address
                 hass.config_entries.async_update_entry(entry, data=new_data)
                 _LOGGER.debug(
                     "%s: Changed IP address to %s",
                     device.device_id,
-                    device.ip,
+                    device.ip_address,
                 )
-                device.ip = discovered_device.ip
+                device.ip_address = discovered_device.ip_address
                 configuration = await device.async_get_configuration()
                 break
 
     if not configuration:
-        message = f"Unable to connect to {device.ip}"
+        message = f"Unable to connect to {device.ip_address}"
         raise ConfigEntryNotReady(message)
 
     coordinator = TSmartCoordinator(
@@ -143,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
     if coordinator.device.request_successful is False:
-        message = f"Unable to connect to {coordinator.device.ip}"
+        message = f"Unable to connect to {coordinator.device.ip_address}"
         raise ConfigEntryNotReady(message)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
