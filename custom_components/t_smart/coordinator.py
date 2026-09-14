@@ -49,5 +49,6 @@ class TSmartCoordinator(DataUpdateCoordinator[TSmartStatus]):
         # Get device status
         status = await self.device.async_get_status()
         if not status:
-            raise UpdateFailed(f"Unsuccessful request to device {self.device.name}")
+            message = f"Unsuccessful request to device {self.device.name}"
+            raise UpdateFailed(message)
         return status

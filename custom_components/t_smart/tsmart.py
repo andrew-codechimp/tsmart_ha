@@ -13,6 +13,17 @@ UDP_PORT = 1337
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_valid_checksum(message: bytes) -> bool:
+    """Return whether the message has a valid checksum."""
+    if len(message) < 2:
+        return False
+
+    checksum = 0
+    for byte in message[:-1]:
+        checksum ^= byte
+    return checksum ^ 0x55 == message[-1]
+
+
 class TSmartMode(IntEnum):
     """Operating modes for TSmart devices."""
 
@@ -34,6 +45,22 @@ class TSmartMode(IntEnum):
         return cls.UNKNOWN
 
 
+class TSmartSmartState(IntEnum):
+    """States for functions using the smart state field."""
+
+    UNINITIALIZED = 0x00
+    IDLE = 0x01
+    RECORDING = 0x02
+    REPRODUCTION = 0x03
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, _value: object) -> TSmartSmartState:
+        """Handle unknown smart states."""
+        _LOGGER.error("Unknown T-Smart smart state received: %s", _value)
+        return cls.UNKNOWN
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TSmartConfiguration:
     device_id: str
@@ -50,6 +77,7 @@ class TSmartStatus:
     temperature_low: float
     setpoint: float
     mode: TSmartMode
+    smart_state: TSmartSmartState
     relay: bool
     e01: bool
     e01_count: int
@@ -91,6 +119,7 @@ class TSmart:
         self.name = name
         self._request_lock = asyncio.Lock()
 
+    @staticmethod
     async def async_discover(
         stop_on_first=False, tries=2, timeout=2
     ) -> list[DiscoveredDevice]:
@@ -106,7 +135,7 @@ class TSmart:
         devices: dict[str, DiscoveredDevice] = {}
 
         data = None
-        for i in range(tries):
+        for _i in range(tries):
             message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
 
             await stream.send(message, ("255.255.255.255", UDP_PORT))
@@ -120,13 +149,14 @@ class TSmart:
 
                     if len(data) != response_struct.size:
                         _LOGGER.warning(
-                            "Unexpected packet length (got: %d, expected: %d)"
-                            % (len(data), response_struct.size)
+                            "Unexpected packet length (got: %d, expected: %d)",
+                            len(data),
+                            response_struct.size,
                         )
                         continue
 
                     if data[0] == 0:
-                        _LOGGER.warning("Got error response (code %d)" % (data[0]))
+                        _LOGGER.warning("Got error response (code %d)", data[0])
                         continue
 
                     if (
@@ -135,34 +165,34 @@ class TSmart:
                         or data[2] != data[2]
                     ):
                         _LOGGER.warning(
-                            "Unexpected response type (%02X %02X %02X)"
-                            % (data[0], data[1], data[2])
+                            "Unexpected response type (%02X %02X %02X)",
+                            data[0],
+                            data[1],
+                            data[2],
                         )
                         continue
 
-                    t = 0
-                    for b in data[:-1]:
-                        t = t ^ b
-                    if t ^ 0x55 != data[-1]:
-                        _LOGGER.warning("Received packet checksum failed")
+                    if not _is_valid_checksum(data):
+                        _LOGGER.warning("Received discover packetchecksum failed")
+                        data = None
                         continue
 
-                    _LOGGER.info("Got response from %s" % remote_addr[0])
+                    _LOGGER.info("Got response from %s", remote_addr[0])
 
                     if remote_addr[0] not in devices:
                         (
-                            cmd,
-                            sub,
-                            sub2,
-                            device_type,
+                            _cmd,
+                            _sub,
+                            _sub2,
+                            _device_type,
                             device_id,
                             name,
-                            tz,
-                            checksum,
+                            _tz,
+                            _checksum,
                         ) = response_struct.unpack(data)
                         device_name = name.decode("utf-8").split("\x00")[0]
-                        device_id_str = "%4X" % device_id
-                        _LOGGER.info("Discovered %s %s" % (device_id_str, device_name))
+                        device_id_str = f"{device_id:4X}"
+                        _LOGGER.info("Discovered %s %s", device_id_str, device_name)
                         devices[remote_addr[0]] = DiscoveredDevice(
                             ip=remote_addr[0],
                             device_id=device_id_str,
@@ -205,48 +235,52 @@ class TSmart:
             stream = await asyncio_dgram.from_socket(sock)
             try:
                 data = None
-                for i in range(2):
+                for _i in range(2):
+                    data = None
                     await stream.send(request)
 
-                    _LOGGER.info("Message sent to %s" % self.ip)
+                    _LOGGER.info("Message sent to %s", self.ip)
 
                     try:
-                        data, remote_addr = await asyncio.wait_for(stream.recv(), 2)
+                        data, _remote_addr = await asyncio.wait_for(stream.recv(), 2)
                         if len(data) != response_struct.size:
                             _LOGGER.warning(
-                                "Unexpected packet length (got: %d, expected: %d)"
-                                % (len(data), response_struct.size)
+                                "Unexpected packet length (got: %d, expected: %d)",
+                                len(data),
+                                response_struct.size,
                             )
                             continue
 
                         if data[0] == 0:
-                            _LOGGER.warning("Got error response (code %d)" % (data[0]))
+                            _LOGGER.warning("Got error response (code %d)", data[0])
                             continue
 
                         if (
                             data[0] != request[0]
-                            or data[1] != data[1]
-                            or data[2] != data[2]
+                            or data[1] != request[1]
+                            or data[2] != request[2]
                         ):
                             _LOGGER.warning(
-                                "Unexpected response type (%02X %02X %02X)"
-                                % (data[0], data[1], data[2])
+                                "Unexpected response type (%02X %02X %02X)",
+                                data[0],
+                                data[1],
+                                data[2],
                             )
                             continue
 
-                        t = 0
-                        for b in data[:-1]:
-                            t = t ^ b
-                        if t ^ 0x55 != data[-1]:
+                        if not _is_valid_checksum(data):
                             _LOGGER.warning("Received packet checksum failed")
+                            data = None
+                            continue
 
                     except asyncio.exceptions.TimeoutError:
+                        _LOGGER.warning("Time-out fetching response from %s", self.ip)
                         continue
 
                     break
 
                 if data is None:
-                    _LOGGER.warning("Timed-out fetching status from %s" % self.ip)
+                    _LOGGER.warning("No valid response received from %s", self.ip)
                     return None
 
                 self.request_successful = True
@@ -266,25 +300,25 @@ class TSmart:
             return None
 
         (
-            cmd,
-            sub,
-            sub2,
-            device_type,
+            _cmd,
+            _sub,
+            _sub2,
+            _device_type,
             device_id,
             device_name,
-            tz,
-            userbin,
+            _tz,
+            _userbin,
             firmware_version_major,
             firmware_version_minor,
             firmware_version_deployment,
             firmware_name,
-            legacy,
-            wifi_ssid,
-            wifi_password,
-            unused,
+            _legacy,
+            _wifi_ssid,
+            _wifi_password,
+            _unused,
         ) = response_struct.unpack(response)
 
-        self.device_id = "%4X" % device_id
+        self.device_id = f"{device_id:4X}"
         self.name = device_name.decode("utf-8").split("\x00")[0]
         self.firmware_name = firmware_name.decode("utf-8").split("\x00")[0]
         self.firmware_version = f"{firmware_version_major}.{firmware_version_minor}.{firmware_version_deployment}"
@@ -296,7 +330,7 @@ class TSmart:
             firmware_version=self.firmware_version,
         )
 
-        _LOGGER.info("Received configuration from %s" % self.ip)
+        _LOGGER.info("Received configuration from %s", self.ip)
 
         return configuration
 
@@ -310,9 +344,9 @@ class TSmart:
             return None
 
         (
-            cmd,
-            sub,
-            sub2,
+            _cmd,
+            _sub,
+            _sub2,
             power,
             setpoint,
             mode,
@@ -321,7 +355,7 @@ class TSmart:
             smart_state,
             t_low,
             error_buffer,
-            checksum,
+            _checksum,
         ) = response_struct.unpack(response)
 
         # Extract 16-bit values (flag in bit 15, counter in bits 0-14)
@@ -358,16 +392,18 @@ class TSmart:
             w02_count=w02_value & 0x7FFF,
             w03=(w03_value >> 15) & 1 == 1,
             w03_count=w03_value & 0x7FFF,
+            smart_state=TSmartSmartState(smart_state),
         )
 
-        _LOGGER.info("Received status from %s" % self.ip)
+        _LOGGER.info("Received status from %s", self.ip)
         return status
 
-    async def async_control_set(self, power, mode, setpoint):
-        _LOGGER.info("Async control set %d %d %0.2f" % (power, mode, setpoint))
+    async def async_control_set(self, power, mode, setpoint) -> None:
+        _LOGGER.info("Async control set %d %d %0.2f", power, mode, setpoint)
 
         if mode < 0 or mode > 5:
-            raise ValueError("Invalid mode")
+            message = "Invalid mode"
+            raise ValueError(message)
 
         request = struct.pack(
             "=BBBBHBB", 0xF2, 0, 0, int(power), int(setpoint * 10), mode, 0
@@ -375,13 +411,16 @@ class TSmart:
 
         response_struct = struct.Struct("=BBBB")
         response = await self._async_request(request, response_struct)
+        if response:
+            _LOGGER.info("Control command acknowledged by %s", self.ip)
 
     async def async_restart(self, offset_ms: int = 1000) -> None:
         """Restart the device after specified offset time in milliseconds."""
         if not 100 <= offset_ms <= 10000:
-            raise ValueError("Offset must be between 100ms and 10000ms")
+            message = "Offset must be between 100ms and 10000ms"
+            raise ValueError(message)
 
-        _LOGGER.info("Restarting device %s after %dms" % (self.ip, offset_ms))
+        _LOGGER.info("Restarting device %s after %dms", self.ip, offset_ms)
 
         # Split offset into low and high bytes for sub-command
         sub = offset_ms & 0xFF  # Low byte
@@ -393,17 +432,43 @@ class TSmart:
         # Device may not respond if offset is very short
         response = await self._async_request(request, response_struct)
         if response:
-            _LOGGER.info("Restart command acknowledged by %s" % self.ip)
+            _LOGGER.info("Restart command acknowledged by %s", self.ip)
 
     async def async_timesync(self) -> None:
         """Set the device time using UTC timestamp in milliseconds."""
         timestamp_ms = int(time.time() * 1000)
 
-        _LOGGER.info("Setting time on device %s to %d" % (self.ip, timestamp_ms))
+        _LOGGER.info("Setting time on device %s to %d", self.ip, timestamp_ms)
 
         request = struct.pack("=BBBIB", 0x03, 0, 0, timestamp_ms, 0)
 
         response_struct = struct.Struct("=BBBB")
         response = await self._async_request(request, response_struct)
         if response:
-            _LOGGER.info("Time set command acknowledged by %s" % self.ip)
+            _LOGGER.info("Time set command acknowledged by %s", self.ip)
+
+    async def async_smart_reset(self) -> None:
+        """Clear the smart data stored on the device."""
+        _LOGGER.info("Resetting smart data on device %s", self.ip)
+
+        request = struct.pack("=BBBB", 0xFA, 0, 0, 0)
+
+        response_struct = struct.Struct("=BBBB")
+        response = await self._async_request(request, response_struct)
+        if response:
+            _LOGGER.info("Smart reset command acknowledged by %s", self.ip)
+
+    async def async_get_smart_time(self) -> int | None:
+        """Get the remaining smart recording time in UTC seconds."""
+        request = struct.pack("=BBBB", 0xFB, 0, 0, 0)
+
+        response_struct = struct.Struct("=BBBIB")
+        response = await self._async_request(request, response_struct)
+
+        if response is None:
+            return None
+
+        (_cmd, _sub, _sub2, smart_time, _checksum) = response_struct.unpack(response)
+        smart_time = int(smart_time)
+        _LOGGER.info("Received smart time %d from %s", smart_time, self.ip)
+        return smart_time

@@ -13,7 +13,7 @@ TO_REDACT = {"ip_address"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: TSmartConfigEntry
+    _hass: HomeAssistant, entry: TSmartConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     device = entry.runtime_data.device

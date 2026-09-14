@@ -53,7 +53,7 @@ AFTER_SET_SLEEP = 2  # Seconds
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     config_entry: TSmartConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
