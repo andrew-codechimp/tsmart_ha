@@ -9,6 +9,7 @@ from enum import IntEnum
 import asyncio_dgram
 
 UDP_PORT = 1337
+TIMEOUT = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,9 +121,7 @@ class TSmart:
         self._request_lock = asyncio.Lock()
 
     @staticmethod
-    async def async_discover(
-        stop_on_first=False, tries=2, timeout=2
-    ) -> list[DiscoveredDevice]:
+    async def async_discover(stop_on_first=False, tries=2) -> list[DiscoveredDevice]:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -142,7 +141,8 @@ class TSmart:
 
             while True:
                 try:
-                    data, remote_addr = await asyncio.wait_for(stream.recv(), timeout)
+                    async with asyncio.timeout(TIMEOUT):
+                        data, remote_addr = await stream.recv()
                     if len(data) == len(message):
                         # Got our own broadcast
                         continue
@@ -242,7 +242,8 @@ class TSmart:
                     _LOGGER.info("Message sent to %s", self.ip)
 
                     try:
-                        data, _remote_addr = await asyncio.wait_for(stream.recv(), 2)
+                        async with asyncio.timeout(TIMEOUT):
+                            data, _remote_addr = await stream.recv()
                         if len(data) != response_struct.size:
                             _LOGGER.warning(
                                 "Unexpected packet length (got: %d, expected: %d)",
