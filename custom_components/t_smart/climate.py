@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -140,7 +141,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         """Get the target temperature."""
         return self.coordinator.data.setpoint
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any):
         """Set the target temperature."""
         if temperature := kwargs.get(ATTR_TEMPERATURE):
             self._attr_target_temperature = temperature

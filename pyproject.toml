@@ -105,9 +105,7 @@ ignore = [
   "PLR2004",  # Magic value used in comparison
 
   # TODO: Fix these warnings
-  "ANN003",   # Missing type annotation for **kwargs
   "ASYNC109", # Async function definition with a timeout parameter
-  "C408",     # Unnecessary dict() call (rewrite as a literal)
   "PGH003",   # Use specific rule codes when ignoring type issues
   "PLW2901",  # for loop variable overwritten by assignment target
 ]
