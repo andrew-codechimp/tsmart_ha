@@ -26,6 +26,38 @@ def _is_valid_checksum(message: bytes) -> bool:
     return checksum ^ 0x55 == message[-1]
 
 
+def _is_valid_response(
+    data: bytes, request: bytearray, response_struct: struct.Struct
+) -> bool:
+    """Return whether a response matches the request and has a valid checksum."""
+    if len(data) != response_struct.size:
+        _LOGGER.warning(
+            "Unexpected packet length (got: %d, expected: %d)",
+            len(data),
+            response_struct.size,
+        )
+        return False
+
+    if data[0] == 0:
+        _LOGGER.warning("Got error response (code %d)", data[0])
+        return False
+
+    if data[:3] != request[:3]:
+        _LOGGER.warning(
+            "Unexpected response type (%02X %02X %02X)",
+            data[0],
+            data[1],
+            data[2],
+        )
+        return False
+
+    if not _is_valid_checksum(data):
+        _LOGGER.warning("Received packet checksum failed")
+        return False
+
+    return True
+
+
 class TSmartMode(IntEnum):
     """Operating modes for TSmart devices."""
 
@@ -251,36 +283,13 @@ class TSmart:
                     try:
                         async with asyncio.timeout(TIMEOUT):
                             data, _remote_addr = await stream.recv()
-                        if len(data) != response_struct.size:
-                            _LOGGER.warning(
-                                "Unexpected packet length (got: %d, expected: %d)",
-                                len(data),
-                                response_struct.size,
-                            )
-                            continue
-
-                        if data[0] == 0:
-                            _LOGGER.warning("Got error response (code %d)", data[0])
-                            continue
-
-                        if (
-                            data[0] != request[0]
-                            or data[1] != request[1]
-                            or data[2] != request[2]
-                        ):
-                            _LOGGER.warning(
-                                "Unexpected response type (%02X %02X %02X)",
-                                data[0],
-                                data[1],
-                                data[2],
-                            )
-                            continue
-
-                        if not _is_valid_checksum(data):
-                            _LOGGER.warning("Received packet checksum failed")
+                        if not _is_valid_response(data, request, response_struct):
                             data = None
                             continue
 
+                    except ConnectionRefusedError:
+                        _LOGGER.warning("Connection refused by %s", self.ip_address)
+                        raise
                     except asyncio.exceptions.TimeoutError:
                         timed_out = True
                         _LOGGER.warning(

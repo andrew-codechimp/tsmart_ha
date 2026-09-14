@@ -33,20 +33,18 @@ _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_TEMPERATURE_MODE,
-            default=TEMPERATURE_MODE_AVERAGE,
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=TEMPERATURE_MODES,
-                translation_key="temperature_mode",
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            ),
+OPTIONS_SCHEMA = vol.Schema({
+    vol.Required(
+        CONF_TEMPERATURE_MODE,
+        default=TEMPERATURE_MODE_AVERAGE,
+    ): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=TEMPERATURE_MODES,
+            translation_key="temperature_mode",
+            mode=selector.SelectSelectorMode.DROPDOWN,
         ),
-    }
-)
+    ),
+})
 
 CONFIG_VERSION = 3
 
@@ -60,17 +58,17 @@ async def _check_connection(
 
     try:
         configuration = await device.async_get_configuration()
-    except TimeoutError:
+    except TimeoutError, ConnectionRefusedError:
         return {"base": "no_thermostat_found"}, None
 
     return {}, configuration
 
 
-def _step_user_data_schema(device: DiscoveredDevice | None = None) -> vol.Schema:
+def _step_user_data_schema(suggested_ip_address: str | None = None) -> vol.Schema:
     """Generate the user step schema."""
     ip_address = vol.Required(CONF_IP_ADDRESS)
-    if device:
-        ip_address.description = {"suggested_value": device.ip_address}
+    if suggested_ip_address:
+        ip_address.description = {"suggested_value": suggested_ip_address}
 
     return vol.Schema({ip_address: str})
 
@@ -113,7 +111,7 @@ class TSmartConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Discovered thermostat: %s", device)
 
             # update with suggested values from discovery
-            self.data_schema = _step_user_data_schema(device)
+            self.data_schema = _step_user_data_schema(device.ip_address)
             return device
 
         return None
@@ -162,7 +160,7 @@ class TSmartConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         # No discovered devices, show the form for manual entry
         return self.async_show_form(
             step_id="user",
-            data_schema=self.data_schema if device else STEP_USER_DATA_SCHEMA,
+            data_schema=self.data_schema,
             errors=errors,
         )
 
@@ -172,16 +170,7 @@ class TSmartConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_IP_ADDRESS,
-                    description={
-                        "suggested_value": entry.data[CONF_IP_ADDRESS],
-                    },
-                ): str,
-            }
-        )
+        schema = _step_user_data_schema(entry.data[CONF_IP_ADDRESS])
         if user_input:
             user_input[CONF_IP_ADDRESS]
             errors, configuration = await _check_connection(
@@ -213,21 +202,19 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
-            {
-                vol.Required(
-                    CONF_TEMPERATURE_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
-                    ),
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=TEMPERATURE_MODES,
-                        translation_key="temperature_mode",
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    ),
-                )
-            }
-        )
+        options = vol.Schema({
+            vol.Required(
+                CONF_TEMPERATURE_MODE,
+                default=self.config_entry.options.get(
+                    CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+                ),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=TEMPERATURE_MODES,
+                    translation_key="temperature_mode",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                ),
+            )
+        })
 
         return self.async_show_form(step_id="init", data_schema=options)
