@@ -12,6 +12,7 @@ UDP_PORT = 1337
 TIMEOUT = 2
 
 _LOGGER = logging.getLogger(__name__)
+_UDP_LOCK = asyncio.Lock()
 
 
 def _is_valid_checksum(message: bytes) -> bool:
@@ -124,98 +125,101 @@ class TSmart:
 
     @staticmethod
     async def async_discover(stop_on_first=False, tries=2) -> list[DiscoveredDevice]:
+        await _UDP_LOCK.acquire()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(("", 1337))
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("", 1337))
 
-        stream = await asyncio_dgram.from_socket(sock)
-        response_struct = struct.Struct("=BBBHL32sBB")
+            stream = await asyncio_dgram.from_socket(sock)
+            response_struct = struct.Struct("=BBBHL32sBB")
 
-        devices: dict[str, DiscoveredDevice] = {}
+            devices: dict[str, DiscoveredDevice] = {}
 
-        data = None
-        for _i in range(tries):
-            message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
+            data = None
+            for _i in range(tries):
+                message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
 
-            await stream.send(message, ("255.255.255.255", UDP_PORT))
+                await stream.send(message, ("255.255.255.255", UDP_PORT))
 
-            while True:
-                try:
-                    async with asyncio.timeout(TIMEOUT):
-                        data, remote_addr = await stream.recv()
-                    if len(data) == len(message):
-                        # Got our own broadcast
-                        continue
+                while True:
+                    try:
+                        async with asyncio.timeout(TIMEOUT):
+                            data, remote_addr = await stream.recv()
+                        if len(data) == len(message):
+                            # Got our own broadcast
+                            continue
 
-                    if len(data) != response_struct.size:
-                        _LOGGER.warning(
-                            "Unexpected packet length (got: %d, expected: %d)",
-                            len(data),
-                            response_struct.size,
-                        )
-                        continue
+                        if len(data) != response_struct.size:
+                            _LOGGER.warning(
+                                "Unexpected packet length (got: %d, expected: %d)",
+                                len(data),
+                                response_struct.size,
+                            )
+                            continue
 
-                    if data[0] == 0:
-                        _LOGGER.warning("Got error response (code %d)", data[0])
-                        continue
+                        if data[0] == 0:
+                            _LOGGER.warning("Got error response (code %d)", data[0])
+                            continue
 
-                    if (
-                        data[0] != message[0]
-                        or data[1] != data[1]
-                        or data[2] != data[2]
-                    ):
-                        _LOGGER.warning(
-                            "Unexpected response type (%02X %02X %02X)",
-                            data[0],
-                            data[1],
-                            data[2],
-                        )
-                        continue
+                        if (
+                            data[0] != message[0]
+                            or data[1] != data[1]
+                            or data[2] != data[2]
+                        ):
+                            _LOGGER.warning(
+                                "Unexpected response type (%02X %02X %02X)",
+                                data[0],
+                                data[1],
+                                data[2],
+                            )
+                            continue
 
-                    if not _is_valid_checksum(data):
-                        _LOGGER.warning("Received discover packetchecksum failed")
-                        data = None
-                        continue
+                        if not _is_valid_checksum(data):
+                            _LOGGER.warning("Received discover packetchecksum failed")
+                            data = None
+                            continue
 
-                    _LOGGER.info("Got response from %s", remote_addr[0])
+                        _LOGGER.info("Got response from %s", remote_addr[0])
 
-                    if remote_addr[0] not in devices:
-                        (
-                            _cmd,
-                            _sub,
-                            _sub2,
-                            _device_type,
-                            device_id,
-                            name,
-                            _tz,
-                            _checksum,
-                        ) = response_struct.unpack(data)
-                        device_name = name.decode("utf-8").split("\x00")[0]
-                        device_id_str = f"{device_id:4X}"
-                        _LOGGER.info("Discovered %s %s", device_id_str, device_name)
-                        devices[remote_addr[0]] = DiscoveredDevice(
-                            ip_address=remote_addr[0],
-                            device_id=device_id_str,
-                            name=device_name,
-                        )
-                        if stop_on_first:
-                            break
+                        if remote_addr[0] not in devices:
+                            (
+                                _cmd,
+                                _sub,
+                                _sub2,
+                                _device_type,
+                                device_id,
+                                name,
+                                _tz,
+                                _checksum,
+                            ) = response_struct.unpack(data)
+                            device_name = name.decode("utf-8").split("\x00")[0]
+                            device_id_str = f"{device_id:4X}"
+                            _LOGGER.info("Discovered %s %s", device_id_str, device_name)
+                            devices[remote_addr[0]] = DiscoveredDevice(
+                                ip_address=remote_addr[0],
+                                device_id=device_id_str,
+                                name=device_name,
+                            )
+                            if stop_on_first:
+                                break
 
-                except asyncio.exceptions.TimeoutError:
+                    except asyncio.exceptions.TimeoutError:
+                        break
+
+                if stop_on_first and len(devices) > 0:
                     break
 
-            if stop_on_first and len(devices) > 0:
-                break
-
-        stream.close()
-        sock.close()
-
-        return devices.values()
+            stream.close()
+            return devices.values()
+        finally:
+            sock.close()
+            _UDP_LOCK.release()
 
     async def _async_request(self, request, response_struct):
-        async with self._request_lock:
+        async with self._request_lock, _UDP_LOCK:
             return await self._async_request_unlocked(request, response_struct)
 
     async def _async_request_unlocked(self, request, response_struct):

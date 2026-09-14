@@ -90,6 +90,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> 
         # Update entry version
         hass.config_entries.async_update_entry(entry, version=2)
 
+    if entry.version <= 2:
+        # Version 2 -> 3: Move temperature mode from data to options.
+        new_data = entry.data.copy()
+        new_options = entry.options.copy()
+        if CONF_TEMPERATURE_MODE in new_data:
+            new_options[CONF_TEMPERATURE_MODE] = new_data.pop(CONF_TEMPERATURE_MODE)
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=3
+        )
+
     _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
@@ -106,7 +117,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
         entry.data[CONF_DEVICE_NAME],
     )
 
-    temperature_mode = entry.data.get(CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE)
+    temperature_mode = entry.options.get(
+        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+    )
 
     # Get device configuration before first refresh
     configuration = await device.async_get_configuration()

@@ -3,23 +3,19 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP address",
-                    "temperature_mode": "Temperature mode"
+                    "ip_address": "IP address"
                 },
                 "data_description": {
-                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
-                    "temperature_mode": "Select the temperature mode for the thermostat."
+                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address."
                 }
             },
-            "edit": {
-                "title": "Edit connection information",
+            "reconfigure": {
+                "title": "Reconfigure connection information",
                 "data": {
-                    "ip_address": "IP address",
-                    "temperature_mode": "Temperature mode"
+                    "ip_address": "IP address"
                 },
                 "data_description": {
-                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
-                    "temperature_mode": "Select the temperature mode for the thermostat."
+                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address."
                 }
             },
             "confirm": {
@@ -30,26 +26,20 @@
             "no_thermostat_found": "No thermostat found."
         },
         "abort": {
-            "no_devices_found": "No devices found on the network",
             "reconfigure_successful": "Reconfiguration was successful",
-            "already_configures": "Already configured"
+            "already_configured": "Already configured"
         }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "ip_address": "IP address",
                     "temperature_mode": "Temperature mode"
                 },
                 "data_description": {
-                    "ip_address": "Enter the IP address of the thermostat.\nIt is recommended to have a static IP address to avoid having to restart the integration when it changes.\nIf your T-Smart thermostat is on a different network (VLAN) you must have a static IP address.",
                     "temperature_mode": "Select the temperature mode for the thermostat."
                 }
             }
-        },
-        "error": {
-            "no_thermostat_found": "No thermostat found."
         }
     },
     "selector": {
