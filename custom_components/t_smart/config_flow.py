@@ -33,18 +33,20 @@ _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
-OPTIONS_SCHEMA = vol.Schema({
-    vol.Required(
-        CONF_TEMPERATURE_MODE,
-        default=TEMPERATURE_MODE_AVERAGE,
-    ): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=TEMPERATURE_MODES,
-            translation_key="temperature_mode",
-            mode=selector.SelectSelectorMode.DROPDOWN,
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_TEMPERATURE_MODE,
+            default=TEMPERATURE_MODE_AVERAGE,
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=TEMPERATURE_MODES,
+                translation_key="temperature_mode",
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            ),
         ),
-    ),
-})
+    }
+)
 
 CONFIG_VERSION = 3
 
@@ -202,19 +204,21 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema({
-            vol.Required(
-                CONF_TEMPERATURE_MODE,
-                default=self.config_entry.options.get(
-                    CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
-                ),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=TEMPERATURE_MODES,
-                    translation_key="temperature_mode",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                ),
-            )
-        })
+        options = vol.Schema(
+            {
+                vol.Required(
+                    CONF_TEMPERATURE_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+                    ),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=TEMPERATURE_MODES,
+                        translation_key="temperature_mode",
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    ),
+                )
+            }
+        )
 
         return self.async_show_form(step_id="init", data_schema=options)
