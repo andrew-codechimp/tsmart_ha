@@ -98,6 +98,9 @@
             "restart": {
                 "name": "Reiniciar"
             },
+            "smart_reset": {
+                "name": "Reset smart mode"
+            },
             "timesync": {
                 "name": "Synchronise time"
             }
@@ -121,6 +124,15 @@
         "sensor": {
             "current_temperature": {
                 "name": "Current temperature"
+            },
+            "smart_state": {
+                "name": "Smart state",
+                "state": {
+                    "uninitialized": "Uninitialised",
+                    "idle": "Idle",
+                    "recording": "Recording",
+                    "reproduction": "Reproduction"
+                }
             }
         }
     }

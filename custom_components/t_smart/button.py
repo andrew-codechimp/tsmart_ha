@@ -24,8 +24,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartRestartButtonEntity(coordinator)])
-    async_add_entities([TSmartTimesyncButtonEntity(coordinator)])
+    async_add_entities([
+        TSmartRestartButtonEntity(coordinator),
+        TSmartTimesyncButtonEntity(coordinator),
+        TSmartSmartResetButtonEntity(coordinator),
+    ])
 
 
 class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):
@@ -63,3 +66,22 @@ class TSmartTimesyncButtonEntity(TSmartEntity, ButtonEntity):
         """Handle the button press."""
         _LOGGER.info("Timesync button pressed for %s", self.device.name)
         await self.device.async_timesync()
+
+
+class TSmartSmartResetButtonEntity(TSmartEntity, ButtonEntity):
+    """t_smart Smart Reset Button class."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "smart_reset"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.device.device_id}_smart_reset"
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.info("Smart reset button pressed for %s", self.device.name)
+        await self.device.async_smart_reset()
