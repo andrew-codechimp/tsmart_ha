@@ -102,10 +102,6 @@ ignore = [
   "FBT002",   # Boolean default positional argument in function definition
   "FBT003",   # Boolean positional value in function call
   "PLR2004",  # Magic value used in comparison
-
-  # TODO: Fix these warnings
-  "PGH003",   # Use specific rule codes when ignoring type issues
-  "PLW2901",  # for loop variable overwritten by assignment target
 ]
 
 
@@ -153,17 +149,6 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
-
-# TODO: Fix these ignored errors
-disable_error_code = [
-    "no-untyped-def",
-    "assignment",
-    "call-arg",
-    "arg-type",
-    "index",
-    "override",
-    "return-value",
-]
 
 # Files to check
 files = ["custom_components/t_smart"]

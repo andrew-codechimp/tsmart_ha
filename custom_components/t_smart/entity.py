@@ -20,6 +20,8 @@ class TSmartEntity(CoordinatorEntity[TSmartCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert self.device.device_id is not None
+
         return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within our domain

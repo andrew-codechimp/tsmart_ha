@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
-import copy
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
@@ -25,13 +27,19 @@ from .const import (
     TEMPERATURE_MODE_AVERAGE,
     TEMPERATURE_MODES,
 )
-from .tsmart import DiscoveredDevice, TSmart, TSmartConfiguration
+from .tsmart import (
+    DiscoveredDevice,
+    TSmart,
+    TSmartConfiguration,
+    TSmartInvalidResponseError,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+USER_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+
+OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(
             CONF_TEMPERATURE_MODE,
             default=TEMPERATURE_MODE_AVERAGE,
@@ -45,7 +53,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_VERSION = 2
+CONFIG_VERSION = 3
 
 
 async def _check_connection(
@@ -57,49 +65,32 @@ async def _check_connection(
 
     try:
         configuration = await device.async_get_configuration()
-    except TimeoutError:
+    except TimeoutError, ConnectionRefusedError, TSmartInvalidResponseError:
         return {"base": "no_thermostat_found"}, None
 
     return {}, configuration
 
 
-def _base_schema(discovery_info=None) -> vol.Schema:
-    """Generate base schema."""
-    base_schema = {}
-    if discovery_info and CONF_IP_ADDRESS in discovery_info:
-        base_schema.update(
-            {
-                vol.Required(
-                    CONF_IP_ADDRESS,
-                    description={"suggested_value": discovery_info[CONF_IP_ADDRESS]},
-                ): str,
-                vol.Required(
-                    CONF_TEMPERATURE_MODE,
-                    default=TEMPERATURE_MODE_AVERAGE,
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=TEMPERATURE_MODES,
-                        translation_key="temperature_mode",
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    ),
-                ),
-            }
-        )
-    else:
-        base_schema.update({vol.Required(CONF_IP_ADDRESS): str})
+def _step_user_data_schema(suggested_ip_address: str | None = None) -> vol.Schema:
+    """Generate the user step schema."""
+    ip_address = vol.Required(CONF_IP_ADDRESS)
+    if suggested_ip_address:
+        ip_address.description = {"suggested_value": suggested_ip_address}
 
-    return vol.Schema(base_schema)
+    return vol.Schema({ip_address: str})
 
 
-class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+STEP_USER_DATA_SCHEMA = _step_user_data_schema()
+
+
+class TSmartConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for TSmart Thermostat."""
 
     VERSION = CONFIG_VERSION
 
     def __init__(self) -> None:
         """Initialize an instance of the TSmart config flow."""
-        self.data_schema = _base_schema()
-        self.discovery_info = None
+        self.data_schema = STEP_USER_DATA_SCHEMA
 
     @staticmethod
     @callback
@@ -107,10 +98,8 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
-    async def _discover(self):
+    async def _discover(self) -> DiscoveredDevice | None:
         """Discover an unconfigured TSmart thermostat."""
-        self.discovery_info = None
-
         devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
         for device in devices:
@@ -126,171 +115,114 @@ class TSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 continue
 
-            self.discovery_info = {
-                CONF_IP_ADDRESS: device.ip_address,
-                CONF_DEVICE_ID: device.device_id,
-                CONF_DEVICE_NAME: device.name,
-            }
-            _LOGGER.debug("Discovered thermostat: %s", self.discovery_info)
+            _LOGGER.debug("Discovered thermostat: %s", device)
 
             # update with suggested values from discovery
-            self.data_schema = _base_schema(self.discovery_info)
+            self.data_schema = _step_user_data_schema(device.ip_address)
+            return device
+
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
+        device = None
 
         if user_input is not None:
             # Try to connect and do any error checking here
             errors, configuration = await _check_connection(user_input[CONF_IP_ADDRESS])
 
             # Save instance
-            if configuration and not errors:
+            if not errors and configuration:
+                await self.async_set_unique_id(configuration.device_id)
+                self._abort_if_unique_id_configured()
+
                 user_input[CONF_DEVICE_ID] = configuration.device_id
                 user_input[CONF_DEVICE_NAME] = configuration.name
                 return self.async_create_entry(
                     title=configuration.device_id, data=user_input
                 )
+        else:
+            # See if we can discover an unconfigured thermostat
+            device = await self._discover()
+            if device:
+                user_input = {}
+                user_input[CONF_IP_ADDRESS] = device.ip_address
+                user_input[CONF_DEVICE_ID] = device.device_id
+                user_input[CONF_DEVICE_NAME] = device.name
+                errors, configuration = await _check_connection(
+                    user_input[CONF_IP_ADDRESS]
+                )
+                if not errors and configuration:
+                    await self.async_set_unique_id(configuration.device_id)
+                    self._abort_if_unique_id_configured()
 
-        # no device specified, see if we can discover an unconfigured thermostat
-        await self._discover()
-        if self.discovery_info:
-            await self.async_set_unique_id(self.discovery_info[CONF_DEVICE_ID])
-            user_input = {}
-            user_input[CONF_IP_ADDRESS] = self.discovery_info[CONF_IP_ADDRESS]
-            user_input[CONF_DEVICE_ID] = self.discovery_info[CONF_DEVICE_ID]
-            user_input[CONF_DEVICE_NAME] = self.discovery_info[CONF_DEVICE_NAME]
-            user_input[CONF_TEMPERATURE_MODE] = TEMPERATURE_MODE_AVERAGE
-            return await self.async_step_edit(user_input)
+                    return self.async_create_entry(
+                        title=user_input[CONF_DEVICE_ID], data=user_input
+                    )
 
-        # no discovered devices, show the form for manual entry
+        # No discovered devices, show the form for manual entry
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.data_schema,
+            errors=errors,
         )
 
-    async def async_step_edit(self, user_input=None):
-        """Edit a discovered or manually inputted thermostat."""
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        schema = _step_user_data_schema(entry.data[CONF_IP_ADDRESS])
         if user_input:
-            errors, configuration = await _check_connection(user_input[CONF_IP_ADDRESS])
+            user_input[CONF_IP_ADDRESS]
+            errors, configuration = await _check_connection(
+                user_input[CONF_IP_ADDRESS],
+            )
             if not errors and configuration:
                 await self.async_set_unique_id(configuration.device_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_DEVICE_ID], data=user_input
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={
+                        CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                    },
                 )
-
         return self.async_show_form(
-            step_id="edit", data_schema=self.data_schema, errors=errors
-        )
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handle an option flow for TSmart Thermostat."""
-
-    async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        """Handle options flow."""
-        errors: dict[str, str] = {}
-
-        self.current_config: dict = dict(self.config_entry.data)
-        self.ip: str = self.current_config.get(CONF_IP_ADDRESS)
-        self.device_id: str = self.current_config.get(CONF_DEVICE_ID)
-        self.device_name: str = self.current_config.get(CONF_DEVICE_NAME)
-
-        schema = self.build_options_schema()
-
-        if user_input is not None:
-            # Try to connect and do any error checking here
-            errors, configuration = await _check_connection(user_input[CONF_IP_ADDRESS])
-
-            if not errors and configuration:
-                user_input[CONF_DEVICE_ID] = configuration.device_id
-                user_input[CONF_DEVICE_NAME] = configuration.name
-
-                errors = await self.save_options(user_input, schema)
-                if not errors:
-                    return self.async_create_entry(title="", data={})
-
-        return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=schema,
             errors=errors,
         )
 
-    async def save_options(
-        self,
-        user_input: dict[str, Any],
-        schema: vol.Schema,
-    ) -> dict:
-        """Save options, and return errors when validation fails."""
 
-        self._process_user_input(user_input, schema)
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            data=self.current_config,
-        )
-        return {}
+class OptionsFlowHandler(OptionsFlow):
+    """Handle TSmart Thermostat options."""
 
-    def _process_user_input(
-        self,
-        user_input: dict[str, Any],
-        schema: vol.Schema,
-    ) -> None:
-        """Process the provided user input against the schema."""
-        for key in schema.schema:
-            if isinstance(key, vol.Marker):
-                key = key.schema
-            if key in user_input:
-                self.current_config[key] = user_input.get(key)
-            elif key in self.current_config:
-                self.current_config.pop(key)
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the Transmission options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
 
-    def build_options_schema(self) -> vol.Schema:
-        """Build the options schema."""
-        data_schema = vol.Schema(
+        options = vol.Schema(
             {
-                vol.Required(CONF_IP_ADDRESS): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT),
-                ),
-                vol.Required(CONF_TEMPERATURE_MODE): selector.SelectSelector(
+                vol.Required(
+                    CONF_TEMPERATURE_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+                    ),
+                ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=TEMPERATURE_MODES,
                         translation_key="temperature_mode",
                         mode=selector.SelectSelectorMode.DROPDOWN,
                     ),
-                ),
+                )
             }
         )
 
-        return _fill_schema_defaults(
-            data_schema,
-            self.current_config,
-        )
-
-
-def _fill_schema_defaults(
-    data_schema: vol.Schema,
-    options: dict[str, str],
-) -> vol.Schema:
-    """Make a copy of the schema with suggested values set to saved options."""
-    schema = {}
-    for key, val in data_schema.schema.items():
-        new_key = key
-        if key in options and isinstance(key, vol.Marker):
-            if (
-                isinstance(key, vol.Optional)
-                and callable(key.default)
-                and key.default()
-            ):
-                new_key = vol.Optional(key.schema, default=options.get(key))  # type: ignore
-            else:
-                new_key = copy.copy(key)
-                new_key.description = {"suggested_value": options.get(key)}  # type: ignore
-        schema[new_key] = val
-    return vol.Schema(schema)
+        return self.async_show_form(step_id="init", data_schema=options)

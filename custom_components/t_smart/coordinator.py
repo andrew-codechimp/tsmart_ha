@@ -10,8 +10,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
-from .tsmart import TSmart, TSmartStatus
+from .const import CONF_TEMPERATURE_MODE, DOMAIN, TEMPERATURE_MODE_AVERAGE
+from .tsmart import TSmart, TSmartInvalidResponseError, TSmartStatus
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,14 +27,15 @@ class TSmartCoordinator(DataUpdateCoordinator[TSmartStatus]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         device: TSmart,
-        temperature_mode: str,
     ) -> None:
         """Initialize the data update coordinator."""
 
         self.device = device
         self._attr_unique_id = self.device.device_id
 
-        self.temperature_mode = temperature_mode
+        self.temperature_mode = config_entry.options.get(
+            CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+        )
 
         super().__init__(
             hass,
@@ -47,8 +48,15 @@ class TSmartCoordinator(DataUpdateCoordinator[TSmartStatus]):
     async def _async_update_data(self) -> TSmartStatus:
         """Update the state of the device."""
         # Get device status
-        status = await self.device.async_get_status()
-        if not status:
-            message = f"Unsuccessful request to device {self.device.name}"
-            raise UpdateFailed(message)
+        try:
+            status = await self.device.async_get_status()
+        except ConnectionRefusedError as err:
+            message = f"Connection refused by device {self.device.name}"
+            raise UpdateFailed(message) from err
+        except TimeoutError as err:
+            message = f"Timeout trying to fetch status from {self.device.name}"
+            raise UpdateFailed(message) from err
+        except TSmartInvalidResponseError as err:
+            message = f"Invalid response received from {self.device.name}"
+            raise UpdateFailed(message) from err
         return status

@@ -51,7 +51,7 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         return f"{self.device.device_id}_temperature"
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
             new_value = self.coordinator.data.temperature_high
@@ -68,7 +68,7 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return the state attributes of the sensor."""
 
         # Temperature related attributes
