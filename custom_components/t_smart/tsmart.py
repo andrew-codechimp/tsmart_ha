@@ -320,7 +320,7 @@ class TSmart:
                         raise
                     except asyncio.exceptions.TimeoutError:
                         timed_out = True
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "Time-out fetching response from %s", self.ip_address
                         )
                         continue
