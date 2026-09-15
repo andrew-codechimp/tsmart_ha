@@ -462,11 +462,7 @@ class TSmart:
         )
 
         response_struct = struct.Struct("=BBBB")
-        try:
-            response = await self._async_request(request, response_struct)
-        except TimeoutError:
-            _LOGGER.debug("Timeout trying to set control on %s", self.ip_address)
-            return
+        response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Control command acknowledged by %s", self.ip_address)
 
@@ -486,11 +482,7 @@ class TSmart:
 
         response_struct = struct.Struct("=BBBB")
         # Device may not respond if offset is very short
-        try:
-            response = await self._async_request(request, response_struct)
-        except TimeoutError:
-            _LOGGER.warning("Timeout trying to restart %s", self.ip_address)
-            return
+        response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Restart command acknowledged by %s", self.ip_address)
 
@@ -503,13 +495,7 @@ class TSmart:
         request = struct.pack("=BBBIB", 0x03, 0, 0, timestamp_ms, 0)
 
         response_struct = struct.Struct("=BBBB")
-        try:
-            response = await self._async_request(request, response_struct)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Timeout trying to synchronize time with %s", self.ip_address
-            )
-            return
+        response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Time set command acknowledged by %s", self.ip_address)
 
@@ -520,11 +506,7 @@ class TSmart:
         request = struct.pack("=BBBB", 0xFA, 0, 0, 0)
 
         response_struct = struct.Struct("=BBBB")
-        try:
-            response = await self._async_request(request, response_struct)
-        except TimeoutError:
-            _LOGGER.warning("Timeout trying to reset smart data on %s", self.ip_address)
-            return
+        response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Smart reset command acknowledged by %s", self.ip_address)
 
