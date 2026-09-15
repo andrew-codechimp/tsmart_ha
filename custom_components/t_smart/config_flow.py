@@ -152,7 +152,6 @@ class TSmartConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_IP_ADDRESS] = device.ip_address
                 user_input[CONF_DEVICE_ID] = device.device_id
                 user_input[CONF_DEVICE_NAME] = device.name
-                user_input[CONF_TEMPERATURE_MODE] = TEMPERATURE_MODE_AVERAGE
                 errors, configuration = await _check_connection(
                     user_input[CONF_IP_ADDRESS]
                 )
