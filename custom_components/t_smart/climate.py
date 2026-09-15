@@ -84,9 +84,9 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     _attr_max_temp = 75
     _attr_min_temp = 10
     _attr_target_temperature_step = 5
-
-    # Inherit name from DeviceInfo, which is obtained from actual device
     _attr_name = None
+
+    _valid_mode: str | None = None
 
     @property
     def unique_id(self) -> str:
@@ -164,9 +164,12 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Get the preset mode."""
-        return next(
+        mode = next(
             (k for k, v in PRESET_MAP.items() if v == self.coordinator.data.mode), None
         )
+        if mode is not None:
+            self._valid_mode = mode
+        return self._valid_mode
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
