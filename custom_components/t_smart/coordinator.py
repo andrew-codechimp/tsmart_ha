@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import CONF_TEMPERATURE_MODE, DOMAIN, TEMPERATURE_MODE_AVERAGE
 from .tsmart import TSmart, TSmartStatus
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,14 +27,15 @@ class TSmartCoordinator(DataUpdateCoordinator[TSmartStatus]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         device: TSmart,
-        temperature_mode: str,
     ) -> None:
         """Initialize the data update coordinator."""
 
         self.device = device
         self._attr_unique_id = self.device.device_id
 
-        self.temperature_mode = temperature_mode
+        self.temperature_mode = config_entry.options.get(
+            CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+        )
 
         super().__init__(
             hass,
