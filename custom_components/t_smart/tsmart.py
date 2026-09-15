@@ -33,7 +33,7 @@ def _is_valid_response(
 ) -> bool:
     """Return whether a response matches the request and has a valid checksum."""
     if len(data) != response_struct.size:
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Unexpected packet length (got: %d, expected: %d)",
             len(data),
             response_struct.size,
@@ -41,11 +41,11 @@ def _is_valid_response(
         return False
 
     if data[0] == 0:
-        _LOGGER.warning("Got error response (code %d)", data[0])
+        _LOGGER.debug("Got error response (code %d)", data[0])
         return False
 
     if data[:3] != request[:3]:
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Unexpected response type (%02X %02X %02X)",
             data[0],
             data[1],
@@ -54,7 +54,7 @@ def _is_valid_response(
         return False
 
     if not _is_valid_checksum(data):
-        _LOGGER.warning("Received packet checksum failed")
+        _LOGGER.debug("Received packet checksum failed")
         return False
 
     return True
@@ -465,7 +465,7 @@ class TSmart:
         try:
             response = await self._async_request(request, response_struct)
         except TimeoutError:
-            _LOGGER.warning("Timeout trying to set control on %s", self.ip_address)
+            _LOGGER.debug("Timeout trying to set control on %s", self.ip_address)
             return
         if response:
             _LOGGER.info("Control command acknowledged by %s", self.ip_address)
