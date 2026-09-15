@@ -27,7 +27,12 @@ from .const import (
     TEMPERATURE_MODE_AVERAGE,
     TEMPERATURE_MODES,
 )
-from .tsmart import DiscoveredDevice, TSmart, TSmartConfiguration
+from .tsmart import (
+    DiscoveredDevice,
+    TSmart,
+    TSmartConfiguration,
+    TSmartInvalidResponseError,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +65,7 @@ async def _check_connection(
 
     try:
         configuration = await device.async_get_configuration()
-    except TimeoutError, ConnectionRefusedError:
+    except TimeoutError, ConnectionRefusedError, TSmartInvalidResponseError:
         return {"base": "no_thermostat_found"}, None
 
     return {}, configuration

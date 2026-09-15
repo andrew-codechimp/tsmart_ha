@@ -25,7 +25,7 @@ from .const import (
     MIN_HA_VERSION,
 )
 from .coordinator import TSmartCoordinator
-from .tsmart import DiscoveredDevice, TSmart
+from .tsmart import DiscoveredDevice, TSmart, TSmartInvalidResponseError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,11 +118,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
 
     # Get device configuration before first refresh
     try:
-        configuration = await device.async_get_configuration()
+        await device.async_get_configuration()
     except ConnectionRefusedError:
         message = f"Connection refused by device {device.name} on {device.ip_address}"
         raise ConfigEntryNotReady(message) from None
-    if not configuration:
+    except TSmartInvalidResponseError:
+        message = f"Invalid response received from device {device.name}"
+        raise ConfigEntryNotReady(message) from None
+    except TimeoutError:
         # Attempt discovery on timeout
         discovered_devices: list[DiscoveredDevice] = await TSmart.async_discover()
 
@@ -130,32 +133,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSmartConfigEntry) -> bo
             message = (
                 f"Timeout connecting to device {device.name} on {device.ip_address}"
             )
-            raise ConfigEntryNotReady(message)
+            raise ConfigEntryNotReady(message) from None
 
         for discovered_device in discovered_devices:
-            if device.device_id == entry.data[CONF_DEVICE_ID]:
-                new_data = entry.data.copy()
-                new_data[CONF_IP_ADDRESS] = discovered_device.ip_address
-                hass.config_entries.async_update_entry(entry, data=new_data)
-                _LOGGER.debug(
-                    "%s: Changed IP address to %s",
-                    device.device_id,
-                    device.ip_address,
-                )
-                device.ip_address = discovered_device.ip_address
-                try:
-                    configuration = await device.async_get_configuration()
-                except ConnectionRefusedError:
-                    message = (
-                        f"Connection refused by device {device.name} "
-                        f"on {device.ip_address}"
-                    )
-                    raise ConfigEntryNotReady(message) from None
-                break
+            if discovered_device.device_id != entry.data[CONF_DEVICE_ID]:
+                continue
 
-    if not configuration:
-        message = f"Unable to connect to {device.ip_address}"
-        raise ConfigEntryNotReady(message)
+            new_data = entry.data.copy()
+            new_data[CONF_IP_ADDRESS] = discovered_device.ip_address
+            hass.config_entries.async_update_entry(entry, data=new_data)
+            _LOGGER.debug(
+                "%s: Changed IP address to %s",
+                device.device_id,
+                device.ip_address,
+            )
+            device.ip_address = discovered_device.ip_address
+            try:
+                await device.async_get_configuration()
+            except ConnectionRefusedError:
+                message = (
+                    f"Connection refused by device {device.name} on {device.ip_address}"
+                )
+                raise ConfigEntryNotReady(message) from None
+            except TSmartInvalidResponseError:
+                message = f"Invalid response received from device {device.name}"
+                raise ConfigEntryNotReady(message) from None
+            except TimeoutError:
+                message = f"Timeout connecting to device {device.name}"
+                raise ConfigEntryNotReady(message) from None
+            break
+        else:
+            message = f"Unable to connect to {device.ip_address}"
+            raise ConfigEntryNotReady(message)
 
     coordinator = TSmartCoordinator(hass=hass, config_entry=entry, device=device)
     entry.runtime_data = TSmartData(device=device, coordinator=coordinator)
