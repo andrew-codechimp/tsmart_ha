@@ -18,7 +18,6 @@ Additional binary sensors for each error and warning are available but disabled 
 
 A synchronise time button is available if you use the inbuilt schedules and the time of the device drifts, but you do not have your thermostat internet facing to time sync automatically. This is disabled by default.
 
-
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
 _Please :star: this repo if you find it useful_  

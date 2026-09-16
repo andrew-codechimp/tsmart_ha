@@ -4,6 +4,9 @@
             "restart": {
                 "default": "mdi:restart"
             },
+            "smart_reset": {
+                "default": "mdi:restore-alert"
+            },
             "timesync": {
                 "default": "mdi:clock-check-outline"
             }
@@ -11,6 +14,11 @@
         "binary_sensor": {
             "anti_legionella": {
                 "default": "mdi:bacteria"
+            }
+        },
+        "sensor": {
+            "smart_state": {
+                "default": "mdi:state-machine"
             }
         },
         "climate": {

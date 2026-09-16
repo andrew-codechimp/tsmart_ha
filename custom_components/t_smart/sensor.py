@@ -10,6 +10,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp
 
@@ -22,6 +23,7 @@ from .const import (
     TEMPERATURE_MODE_LOW,
 )
 from .entity import TSmartEntity
+from .tsmart import TSmartSmartState
 
 PARALLEL_UPDATES = 0
 
@@ -33,7 +35,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([TSmartTemperatureSensorEntity(coordinator)])
+    async_add_entities(
+        [
+            TSmartTemperatureSensorEntity(coordinator),
+            TSmartSmartStateSensorEntity(coordinator),
+        ]
+    )
 
 
 class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
@@ -97,3 +104,24 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         if super_attrs:
             attrs.update(super_attrs)
         return attrs
+
+
+class TSmartSmartStateSensorEntity(TSmartEntity, SensorEntity):
+    """t_smart Smart State Sensor class."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "smart_state"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.device.device_id}_smart_state"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the smart state reported by the device."""
+        smart_state = self.coordinator.data.smart_state
+        if smart_state is TSmartSmartState.UNKNOWN:
+            return None
+        return smart_state.name.lower()
