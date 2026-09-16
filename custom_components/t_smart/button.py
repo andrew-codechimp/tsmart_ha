@@ -24,11 +24,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([
-        TSmartRestartButtonEntity(coordinator),
-        TSmartTimesyncButtonEntity(coordinator),
-        TSmartSmartResetButtonEntity(coordinator),
-    ])
+    async_add_entities(
+        [
+            TSmartRestartButtonEntity(coordinator),
+            TSmartTimesyncButtonEntity(coordinator),
+            TSmartSmartResetButtonEntity(coordinator),
+        ]
+    )
 
 
 class TSmartRestartButtonEntity(TSmartEntity, ButtonEntity):

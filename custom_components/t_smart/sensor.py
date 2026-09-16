@@ -35,10 +35,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
-    async_add_entities([
-        TSmartTemperatureSensorEntity(coordinator),
-        TSmartSmartStateSensorEntity(coordinator),
-    ])
+    async_add_entities(
+        [
+            TSmartTemperatureSensorEntity(coordinator),
+            TSmartSmartStateSensorEntity(coordinator),
+        ]
+    )
 
 
 class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
