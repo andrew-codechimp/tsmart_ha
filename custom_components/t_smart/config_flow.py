@@ -24,7 +24,7 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_TEMPERATURE_MODE,
     DOMAIN,
-    TEMPERATURE_MODE_AVERAGE,
+    TEMPERATURE_MODE_HIGH,
     TEMPERATURE_MODES,
 )
 from .tsmart import (
@@ -37,21 +37,6 @@ from .tsmart import (
 _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_TEMPERATURE_MODE,
-            default=TEMPERATURE_MODE_AVERAGE,
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=TEMPERATURE_MODES,
-                translation_key="temperature_mode",
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            ),
-        ),
-    }
-)
 
 CONFIG_VERSION = 3
 
@@ -213,7 +198,7 @@ class OptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONF_TEMPERATURE_MODE,
                     default=self.config_entry.options.get(
-                        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_AVERAGE
+                        CONF_TEMPERATURE_MODE, TEMPERATURE_MODE_HIGH
                     ),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
