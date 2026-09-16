@@ -64,7 +64,7 @@ After restarting Home Assistant:
 
 - If your change the IP address of your thermostat the integration will try to rediscover it automatically at restart. If your thermostat is on a different network you will have to modify this in the integration by going into settings/configure.
 
-- By default the integration takes the average of both sensors within the thermostats, this can be changed by going into settings, configuring the thermostat and choosing a different temperature mode. For vertical thermostats the High setting will match the display and the app.
+- By default the integration takes the high thermostat reading to match the display and app. This can be changed by going into settings, configuring the thermostat and choosing a different temperature mode.
 
 ## Screenshots
 
