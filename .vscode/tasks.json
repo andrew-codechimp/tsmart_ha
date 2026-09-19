@@ -2,21 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Home Assistant on port 8123",
-            "type": "shell",
-            "command": "scripts/develop",
-            "isBackground": true,
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
             "label": "Lint (All)",
             "type": "shell",
             "command": "./scripts/lint",
