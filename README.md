@@ -18,6 +18,8 @@ Additional binary sensors for each error and warning are available but disabled 
 
 A synchronise time button is available if you use the inbuilt schedules and the time of the device drifts, but you do not have your thermostat internet facing to time sync automatically. This is disabled by default.
 
+A smart mode state diagnostic sensor and a reset smart mode button are available if you use the T-Smart inbuilt smart mode. These are disabled by default.
+
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
 _Please :star: this repo if you find it useful_  
@@ -63,7 +65,7 @@ After restarting Home Assistant:
 
 - If your change the IP address of your thermostat the integration will try to rediscover it automatically at restart. If your thermostat is on a different network you will have to modify this in the integration by going into settings/configure.
 
-- By default the integration takes the average of both sensors within the thermostats, this can be changed by going into settings, configuring the thermostat and choosing a different temperature mode. For vertical thermostats the High setting will match the display and the app.
+- By default the integration takes the high thermostat reading to match the display and app. This can be changed by going into settings, configuring the thermostat and choosing a different temperature mode.
 
 ## Screenshots
 
