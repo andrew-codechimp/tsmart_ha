@@ -51,6 +51,7 @@ PRESET_MAP = {
 }
 
 AFTER_SET_SLEEP = 2  # Seconds
+_SUPPORTS_NATIVE_TEMPERATURE = hasattr(ClimateEntity, "native_temperature_unit")
 
 
 async def async_setup_entry(
@@ -66,7 +67,7 @@ async def async_setup_entry(
 class TSmartClimateEntity(TSmartEntity, ClimateEntity):
     """t_smart Climate class."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
     # Setting the new TURN_ON / TURN_OFF features isn't enough to make stop the
@@ -119,14 +120,14 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         await self.device.async_control_set(
             hvac_mode == HVACMode.HEAT,
             PRESET_MAP.get(self.preset_mode or PRESET_MANUAL, TSmartMode.MANUAL),
-            self.target_temperature,
+            self.native_target_temperature,
         )
 
         await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
 
     @property
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Get the current temperature."""
         if self.coordinator.temperature_mode == TEMPERATURE_MODE_HIGH:
             return self.coordinator.data.temperature_high
@@ -137,14 +138,23 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         return self.coordinator.data.temperature_average
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Get the target temperature."""
         return self.coordinator.data.setpoint
+
+    # HACK until 2026.11 min versin, expose legacy names only when Home Assistant lacks the native temperature API.
+    if not _SUPPORTS_NATIVE_TEMPERATURE:
+        _attr_temperature_unit = _attr_native_temperature_unit
+        current_temperature = native_current_temperature
+        target_temperature = native_target_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if temperature := kwargs.get(ATTR_TEMPERATURE):
-            self._attr_target_temperature = temperature
+            if _SUPPORTS_NATIVE_TEMPERATURE:
+                self._attr_native_target_temperature = temperature
+            else:
+                self._attr_target_temperature = temperature
 
         hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
         self._attr_hvac_mode = hvac_mode
@@ -178,7 +188,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         await self.device.async_control_set(
             self.hvac_mode == HVACMode.HEAT,
             PRESET_MAP[preset_mode],
-            self.target_temperature,
+            self.native_target_temperature,
         )
         await asyncio.sleep(AFTER_SET_SLEEP)
         await self.coordinator.async_request_refresh()
@@ -192,19 +202,19 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
             ATTR_TEMPERATURE_LOW: display_temp(
                 self.hass,
                 self.coordinator.data.temperature_low,
-                self._attr_temperature_unit,
+                self._attr_native_temperature_unit,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_HIGH: display_temp(
                 self.hass,
                 self.coordinator.data.temperature_high,
-                self._attr_temperature_unit,
+                self._attr_native_temperature_unit,
                 PRECISION_TENTHS,
             ),
             ATTR_TEMPERATURE_AVERAGE: display_temp(
                 self.hass,
                 self.coordinator.data.temperature_average,
-                self._attr_temperature_unit,
+                self._attr_native_temperature_unit,
                 PRECISION_TENTHS,
             ),
         }
