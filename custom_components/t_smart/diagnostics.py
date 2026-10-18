@@ -16,6 +16,9 @@ async def async_get_config_entry_diagnostics(
     _hass: HomeAssistant, entry: TSmartConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    if not hasattr(entry, "runtime_data"):
+        return {"state": entry.state.value}
+
     device = entry.runtime_data.device
     data = entry.runtime_data.coordinator.data
 
