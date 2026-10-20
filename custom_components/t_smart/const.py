@@ -1,6 +1,6 @@
 """Constants for the T-Smart Thermostat integration."""
 
-MIN_HA_VERSION = "2026.4"
+MIN_HA_VERSION = "2026.8"
 
 DOMAIN = "t_smart"
 DATA_DISCOVERY_SERVICE = "tsmart_discovery"
