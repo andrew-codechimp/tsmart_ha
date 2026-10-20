@@ -142,7 +142,7 @@ class TSmartClimateEntity(TSmartEntity, ClimateEntity):
         """Get the target temperature."""
         return self.coordinator.data.setpoint
 
-    # HACK until 2026.11 min versin, expose legacy names only when Home Assistant lacks the native temperature API.
+    # HACK until 2026.11 min version, expose legacy names only when Home Assistant lacks the native temperature API.
     if not _SUPPORTS_NATIVE_TEMPERATURE:
         _attr_temperature_unit = _attr_native_temperature_unit
         current_temperature = native_current_temperature
