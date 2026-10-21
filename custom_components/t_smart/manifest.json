@@ -1,7 +1,7 @@
 {
   "domain": "t_smart",
   "name": "T-Smart Thermostat",
-  "categories": [ "energy.ev_charging" ],
+  "categories": [ "climate.water_heaters" ],
   "codeowners": [
     "@andrew-codechimp"
   ],
