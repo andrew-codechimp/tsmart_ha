@@ -1,6 +1,7 @@
 {
   "domain": "t_smart",
   "name": "T-Smart Thermostat",
+  "categories": [ "climate.water_heaters" ],
   "codeowners": [
     "@andrew-codechimp"
   ],
