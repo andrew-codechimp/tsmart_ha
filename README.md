@@ -29,7 +29,7 @@ _If you want to show your support please_
 
 ## Installation
 
-If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
+If you are moving from the pdw-mb version you should uninstall it first and remove the repository from Marketplace/HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
 ⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
@@ -46,16 +46,12 @@ In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T
 <details>
 <summary>Show detailed instructions</summary>
 
-Installation via HACS is recommended, but a manual setup is supported.
-
 - Manually copy custom_components/t_smart folder from latest release to custom_components folder in your config folder.
 - Restart Home Assistant.
 - In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T-Smart Thermostat"
 </details>
 
 ## Discover thermostats
-
-After restarting Home Assistant:
 
 - Go to Settings -> Devices & services -> Add Integration.
 
