@@ -22,7 +22,8 @@ A smart mode state diagnostic sensor and a reset smart mode button are available
 
 This project is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Tesla UK Limited or EUROICC.
 
-_Please :star: this repo if you find it useful_  
+_Please ⭐ this repo on [GitHub][repository] if you find it useful_
+
 _If you want to show your support please_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
@@ -95,6 +96,7 @@ Thanks to pdw-mb for the [original](https://github.com/pdw-mb/tsmart_ha) version
 
 <!---->
 
+[repository]: https://github.com/andrew-codechimp/tsmart_ha
 [hacs]: https://github.com/hacs/integration
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
 [download-latest-shield]: https://img.shields.io/github/downloads/andrew-codechimp/tsmart_ha/latest/total?style=for-the-badge
