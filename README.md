@@ -30,7 +30,7 @@ _If you want to show your support please_
 
 ## Installation
 
-If you are moving from the pdw-mb HACS version you should uninstall it first and remove the repository from HACS to avoid confusion. If you see two then select the one with the description starting with new. 
+If you are moving from the pdw-mb version you should uninstall it first and remove the repository from Marketplace/HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
 ⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
