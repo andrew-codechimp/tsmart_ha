@@ -27,7 +27,7 @@ Changelog = "https://github.com/andrew-codechimp/tsmart_ha/releases"
 
 [dependency-groups]
 dev = [
-    "asyncio-dgram==3.0.0",
+    "asyncio-dgram",
     "homeassistant==2026.8.0",
     "mypy",
     "ruff",
