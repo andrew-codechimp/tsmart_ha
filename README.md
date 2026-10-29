@@ -3,8 +3,8 @@
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![Downloads][download-latest-shield]]()
+[![marketplace][marketplacebadge]][marketplace]
 [![License][license-shield]](LICENSE)
-[![hacs][hacsbadge]][hacs]
 
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
@@ -34,11 +34,11 @@ If you are moving from the pdw-mb HACS version you should uninstall it first and
 
 ⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
-### HACS
+### Marketplace/HACS
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=tsmart_ha&category=Integration)
 
-Restart Home Assistant
+**Restart Home Assistant if using HACS**
 
 In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T-Smart Thermostat".
 
@@ -47,7 +47,7 @@ In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T
 <details>
 <summary>Show detailed instructions</summary>
 
-Installation via HACS is recommended, but a manual setup is supported.
+Installation via Marketplace/HACS is recommended, but a manual setup is supported.
 
 - Manually copy custom_components/t_smart folder from latest release to custom_components folder in your config folder.
 - Restart Home Assistant.
@@ -97,11 +97,11 @@ Thanks to pdw-mb for the [original](https://github.com/pdw-mb/tsmart_ha) version
 <!---->
 
 [repository]: https://github.com/andrew-codechimp/tsmart_ha
-[hacs]: https://github.com/hacs/integration
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
 [download-latest-shield]: https://img.shields.io/github/downloads/andrew-codechimp/tsmart_ha/latest/total?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [commits]: https://github.com/andrew-codechimp/tsmart_ha/commits/main
 [license-shield]: https://img.shields.io/github/license/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/andrew-codechimp/tsmart_ha.svg?style=for-the-badge
 [releases]: https://github.com/andrew-codechimp/tsmart_ha/releases
+[marketplace]: https://home-assistant.io/integrations/marketplace
+[marketplacebadge]: https://img.shields.io/badge/Marketplace-Default-41BDF5.svg?style=for-the-badge
