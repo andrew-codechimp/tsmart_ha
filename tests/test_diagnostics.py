@@ -1,35 +1,27 @@
 """Regression tests for diagnostics without runtime data."""
 
-from unittest import IsolatedAsyncioTestCase
-from unittest.mock import Mock
-
+import pytest
 from custom_components.t_smart.diagnostics import async_get_config_entry_diagnostics
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
-class TestDiagnostics(IsolatedAsyncioTestCase):
-    """Check diagnostics before setup and after runtime data is removed."""
+@pytest.mark.parametrize(
+    "state",
+    [
+        pytest.param(ConfigEntryState.SETUP_RETRY, id="before-setup"),
+        pytest.param(ConfigEntryState.NOT_LOADED, id="after-unload"),
+    ],
+)
+async def test_without_runtime_data(
+    hass: HomeAssistant,
+    state: ConfigEntryState,
+) -> None:
+    """Return the setup state without accessing missing runtime data."""
+    entry = MockConfigEntry(domain="t_smart", state=state)
 
-    async def test_before_setup(self) -> None:
-        """Return the setup failure state without accessing runtime data."""
-        entry = Mock(spec=ConfigEntry, state=ConfigEntryState.SETUP_RETRY)
-
-        result = await async_get_config_entry_diagnostics(
-            Mock(spec=HomeAssistant), entry
-        )
-
-        assert result == {"state": ConfigEntryState.SETUP_RETRY.value}
-
-    async def test_after_unload(self) -> None:
-        """Return the unloaded state after runtime data is deleted."""
-        entry = Mock(spec=ConfigEntry, state=ConfigEntryState.NOT_LOADED)
-        entry.runtime_data = object()
-        del entry.runtime_data
-
-        result = await async_get_config_entry_diagnostics(
-            Mock(spec=HomeAssistant), entry
-        )
-
-        assert result == {"state": ConfigEntryState.NOT_LOADED.value}
+    assert await async_get_config_entry_diagnostics(hass, entry) == {
+        "state": state.value
+    }

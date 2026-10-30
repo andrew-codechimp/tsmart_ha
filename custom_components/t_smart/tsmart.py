@@ -7,11 +7,9 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import cast
 
-import asyncio_dgram
-from asyncio_dgram.aio import DatagramClient, DatagramServer
-
 UDP_PORT = 1337
 TIMEOUT = 2
+_UDP_BUFFER_SIZE = 65536
 
 _LOGGER = logging.getLogger(__name__)
 _UDP_LOCK = asyncio.Lock()
@@ -172,104 +170,105 @@ class TSmart:
         self._request_lock = asyncio.Lock()
 
     @staticmethod
-    async def async_discover(  # noqa: PLR0915
-        stop_on_first: bool = False,  # noqa: FBT001
+    async def async_discover(
+        stop_on_first: bool = False,
         tries: int = 2,
     ) -> list[DiscoveredDevice]:
         """Discover T-Smart devices on the local network."""
-        await _UDP_LOCK.acquire()
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
+        loop = asyncio.get_running_loop()
+        async with _UDP_LOCK:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                sock.bind(("", UDP_PORT))
 
-        try:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(("", 1337))
+                sock.setblocking(False)
+                response_struct = struct.Struct("=BBBHL32sBB")
 
-            stream = cast(DatagramServer, await asyncio_dgram.from_socket(sock))
-            response_struct = struct.Struct("=BBBHL32sBB")
+                devices: dict[str, DiscoveredDevice] = {}
 
-            devices: dict[str, DiscoveredDevice] = {}
+                data = None
+                for _i in range(tries):
+                    message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
 
-            data = None
-            for _i in range(tries):
-                message = struct.pack("=BBBB", 0x01, 0, 0, 0x01 ^ 0x55)
+                    await loop.sock_sendto(sock, message, ("255.255.255.255", UDP_PORT))
 
-                await stream.send(message, ("255.255.255.255", UDP_PORT))
+                    while True:
+                        try:
+                            async with asyncio.timeout(TIMEOUT):
+                                data, remote_addr = await loop.sock_recvfrom(
+                                    sock, _UDP_BUFFER_SIZE
+                                )
+                            if len(data) == len(message):
+                                # Got our own broadcast
+                                continue
 
-                while True:
-                    try:
-                        async with asyncio.timeout(TIMEOUT):
-                            data, remote_addr = await stream.recv()
-                        if len(data) == len(message):
-                            # Got our own broadcast
-                            continue
+                            if len(data) != response_struct.size:
+                                _LOGGER.debug(
+                                    "Unexpected packet length (got: %d, expected: %d)",
+                                    len(data),
+                                    response_struct.size,
+                                )
+                                continue
 
-                        if len(data) != response_struct.size:
-                            _LOGGER.debug(
-                                "Unexpected packet length (got: %d, expected: %d)",
-                                len(data),
-                                response_struct.size,
-                            )
-                            continue
+                            if data[0] == 0:
+                                _LOGGER.debug("Got error response (code %d)", data[0])
+                                continue
 
-                        if data[0] == 0:
-                            _LOGGER.debug("Got error response (code %d)", data[0])
-                            continue
+                            if (
+                                data[0] != message[0]
+                                or data[1] != data[1]
+                                or data[2] != data[2]
+                            ):
+                                _LOGGER.debug(
+                                    "Unexpected response type (%02X %02X %02X)",
+                                    data[0],
+                                    data[1],
+                                    data[2],
+                                )
+                                continue
 
-                        if (
-                            data[0] != message[0]
-                            or data[1] != data[1]
-                            or data[2] != data[2]
-                        ):
-                            _LOGGER.debug(
-                                "Unexpected response type (%02X %02X %02X)",
-                                data[0],
-                                data[1],
-                                data[2],
-                            )
-                            continue
+                            if not _is_valid_checksum(data):
+                                _LOGGER.debug(
+                                    "Received discover packet checksum failed"
+                                )
+                                data = None
+                                continue
 
-                        if not _is_valid_checksum(data):
-                            _LOGGER.debug("Received discover packet checksum failed")
-                            data = None
-                            continue
+                            remote_ip = cast(tuple[str, int], remote_addr)[0]
+                            _LOGGER.debug("Got response from %s", remote_ip)
 
-                        remote_ip = cast(tuple[str, int], remote_addr)[0]
-                        _LOGGER.debug("Got response from %s", remote_ip)
+                            if remote_ip not in devices:
+                                (
+                                    _cmd,
+                                    _sub,
+                                    _sub2,
+                                    _device_type,
+                                    device_id,
+                                    name,
+                                    _tz,
+                                    _checksum,
+                                ) = response_struct.unpack(data)
+                                device_name = name.decode("utf-8").split("\x00")[0]
+                                device_id_str = f"{device_id:4X}"
+                                _LOGGER.info(
+                                    "Discovered %s %s", device_id_str, device_name
+                                )
+                                devices[remote_ip] = DiscoveredDevice(
+                                    ip_address=remote_ip,
+                                    device_id=device_id_str,
+                                    name=device_name,
+                                )
+                                if stop_on_first:
+                                    break
 
-                        if remote_ip not in devices:
-                            (
-                                _cmd,
-                                _sub,
-                                _sub2,
-                                _device_type,
-                                device_id,
-                                name,
-                                _tz,
-                                _checksum,
-                            ) = response_struct.unpack(data)
-                            device_name = name.decode("utf-8").split("\x00")[0]
-                            device_id_str = f"{device_id:4X}"
-                            _LOGGER.info("Discovered %s %s", device_id_str, device_name)
-                            devices[remote_ip] = DiscoveredDevice(
-                                ip_address=remote_ip,
-                                device_id=device_id_str,
-                                name=device_name,
-                            )
-                            if stop_on_first:
-                                break
+                        except asyncio.exceptions.TimeoutError:
+                            break
 
-                    except asyncio.exceptions.TimeoutError:
+                    if stop_on_first and len(devices) > 0:
                         break
 
-                if stop_on_first and len(devices) > 0:
-                    break
-
-            stream.close()
-            return list(devices.values())
-        finally:
-            sock.close()
-            _UDP_LOCK.release()
+                return list(devices.values())
 
     async def _async_request(
         self, request: bytes, response_struct: struct.Struct
@@ -288,57 +287,48 @@ class TSmart:
             t = t ^ b
         request_data[-1] = t ^ 0x55
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
-
-        try:
+        loop = asyncio.get_running_loop()
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(("", 1337))
-            sock.connect((self.ip_address, UDP_PORT))
-
-            stream = cast(DatagramClient, await asyncio_dgram.from_socket(sock))
-            try:
+            sock.bind(("", UDP_PORT))
+            sock.setblocking(False)
+            await loop.sock_connect(sock, (self.ip_address, UDP_PORT))
+            data = None
+            for _i in range(2):
                 data = None
-                for _i in range(2):
-                    data = None
-                    timed_out = False
-                    try:
-                        await stream.send(bytes(request_data))
-                    except ConnectionRefusedError:
-                        _LOGGER.debug("Connection refused by %s", self.ip_address)
-                        raise
+                timed_out = False
+                try:
+                    await loop.sock_sendall(sock, bytes(request_data))
+                except ConnectionRefusedError:
+                    _LOGGER.debug("Connection refused by %s", self.ip_address)
+                    raise
 
-                    _LOGGER.info("Message sent to %s", self.ip_address)
+                _LOGGER.info("Message sent to %s", self.ip_address)
 
-                    try:
-                        async with asyncio.timeout(TIMEOUT):
-                            data, _remote_addr = await stream.recv()
-                        if not _is_valid_response(data, request_data, response_struct):
-                            data = None
-                            continue
-
-                    except ConnectionRefusedError:
-                        raise
-                    except asyncio.exceptions.TimeoutError:
-                        timed_out = True
-                        _LOGGER.debug(
-                            "Time-out fetching response from %s", self.ip_address
-                        )
+                try:
+                    async with asyncio.timeout(TIMEOUT):
+                        data = await loop.sock_recv(sock, _UDP_BUFFER_SIZE)
+                    if not _is_valid_response(data, request_data, response_struct):
+                        data = None
                         continue
 
-                    break
+                except ConnectionRefusedError:
+                    raise
+                except asyncio.exceptions.TimeoutError:
+                    timed_out = True
+                    _LOGGER.debug("Time-out fetching response from %s", self.ip_address)
+                    continue
 
-                if data is None:
-                    if timed_out:
-                        raise TimeoutError
-                    message = f"Invalid response received from {self.ip_address}"
-                    raise TSmartInvalidResponseError(message)
+                break
 
-                self.request_successful = True
-                return data
-            finally:
-                stream.close()
-        finally:
-            sock.close()
+            if data is None:
+                if timed_out:
+                    raise TimeoutError
+                message = f"Invalid response received from {self.ip_address}"
+                raise TSmartInvalidResponseError(message)
+
+            self.request_successful = True
+            return data
 
     async def async_get_configuration(self) -> TSmartConfiguration:
         """Fetch the device configuration from the smart thermostat."""
@@ -446,7 +436,7 @@ class TSmart:
 
     async def async_control_set(
         self,
-        power: bool,  # noqa: FBT001
+        power: bool,
         mode: TSmartMode,
         setpoint: float,
     ) -> None:

@@ -228,7 +228,7 @@ class TSmartWarningBinarySensorEntity(TSmartEntity, BinarySensorEntity):
             if self.coordinator.data.w01:
                 summary += "W01 - Bad High Sensor, "
             if self.coordinator.data.w02:
-                summary += "W01 - Count, "
+                summary += "W02 - Bad Low Sensor, "
             if self.coordinator.data.w03:
                 summary += "W03 - Long heating, "
 
