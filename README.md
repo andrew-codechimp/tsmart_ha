@@ -1,3 +1,4 @@
+<!-- ha-marketplace:exclude-start -->
 # Tesla T-Smart thermostat Home Assistant integration
 
 [![GitHub Release][releases-shield]][releases]
@@ -6,6 +7,7 @@
 [![marketplace][marketplacebadge]][marketplace]
 [![License][license-shield]](LICENSE)
 
+<!-- ha-marketplace:exclude-end -->
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
 The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.
@@ -28,6 +30,7 @@ _If you want to show your support please_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation
 
 If you are moving from the pdw-mb version you should uninstall it first and remove the repository from Marketplace/HACS to avoid confusion. If you see two then select the one with the description starting with new. 
@@ -40,6 +43,7 @@ If you are moving from the pdw-mb version you should uninstall it first and remo
 
 In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T-Smart Thermostat".
 
+<!-- ha-marketplace:exclude-end -->
 ## Discover thermostats
 
 After restarting Home Assistant:
