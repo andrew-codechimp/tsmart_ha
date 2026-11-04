@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+from calendar import day_name
+from datetime import time
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .common import TSmartConfigEntry
+from .tsmart import TSmartClock, TSmartError
 
 TO_REDACT = {"ip_address"}
+
+
+def _format_clock(clock: TSmartClock) -> str:
+    """Format a valid device weekday and time without adding a date."""
+    if not 1 <= clock.day_of_week <= 7:
+        message = "Invalid clock day of week"
+        raise ValueError(message)
+    clock_time = time(clock.hour, clock.minute, clock.second)
+    return f"{day_name[clock.day_of_week - 1]} {clock_time.isoformat()}"
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,6 +34,15 @@ async def async_get_config_entry_diagnostics(
     device = entry.runtime_data.device
     data = entry.runtime_data.coordinator.data
 
+    clock_data: dict[str, str]
+    try:
+        clock = await device.async_clock_read()
+        formatted_clock = _format_clock(clock)
+    except (OSError, TSmartError, ValueError) as err:
+        clock_data = {"error": type(err).__name__}
+    else:
+        clock_data = {"time": formatted_clock}
+
     return {
         "entry": {
             "title": entry.title,
@@ -31,6 +52,7 @@ async def async_get_config_entry_diagnostics(
         "device": {
             "firmware_name": device.firmware_name,
             "firmware_version": device.firmware_version,
+            "clock": clock_data,
             "power": data.power,
             "mode": data.mode.name if data.mode is not None else None,
             "setpoint": data.setpoint,
