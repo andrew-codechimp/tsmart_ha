@@ -116,6 +116,16 @@ class TSmartConfiguration:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class TSmartClock:
+    """Represent the device clock, with Monday=1 through Sunday=7."""
+
+    day_of_week: int
+    hour: int
+    minute: int
+    second: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class TSmartStatus:
     """Represent the current status of a T-Smart device."""
 
@@ -487,17 +497,31 @@ class TSmart:
             _LOGGER.info("Restart command acknowledged by %s", self.ip_address)
 
     async def async_timesync(self) -> None:
-        """Set the device time using UTC timestamp in milliseconds."""
-        timestamp_ms = int(time.time() * 1000)
+        """Set the device time using a UTC timestamp in seconds."""
+        timestamp = int(time.time())
 
-        _LOGGER.info("Setting time on device %s to %d", self.ip_address, timestamp_ms)
+        _LOGGER.info("Setting time on device %s to %d", self.ip_address, timestamp)
 
-        request = struct.pack("=BBBIB", 0x03, 0, 0, timestamp_ms, 0)
+        request = struct.pack("<BBBIB", 0x03, 0, 0, timestamp, 0)
 
         response_struct = struct.Struct("=BBBB")
         response = await self._async_request(request, response_struct)
         if response:
             _LOGGER.info("Time set command acknowledged by %s", self.ip_address)
+
+    async def async_clock_read(self) -> TSmartClock:
+        """Read the device's day of the week and current time."""
+        request = struct.pack("<BBBB", 0x06, 0, 0, 0)
+        response_struct = struct.Struct("<8B")
+        response = await self._async_request(request, response_struct)
+
+        (_cmd, _sub, _sub2, day_of_week, hour, minute, second, _checksum) = (
+            response_struct.unpack(response)
+        )
+        _LOGGER.info("Received clock from %s", self.ip_address)
+        return TSmartClock(
+            day_of_week=day_of_week, hour=hour, minute=minute, second=second
+        )
 
     async def async_smart_reset(self) -> None:
         """Clear the smart data stored on the device."""
