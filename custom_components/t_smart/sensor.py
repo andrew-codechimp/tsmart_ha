@@ -67,12 +67,7 @@ class TSmartTemperatureSensorEntity(TSmartEntity, SensorEntity):
         else:
             new_value = self.coordinator.data.temperature_average
 
-        return display_temp(
-            self.hass,
-            new_value,
-            self._attr_native_unit_of_measurement,
-            PRECISION_TENTHS,
-        )
+        return round(new_value, 1)
 
     @property
     def extra_state_attributes(self) -> dict[str, float | None] | None:

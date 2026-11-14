@@ -27,14 +27,19 @@ Changelog = "https://github.com/andrew-codechimp/tsmart_ha/releases"
 
 [dependency-groups]
 dev = [
-    "asyncio-dgram",
     "homeassistant==2026.8.0",
     "mypy",
+    "pytest-homeassistant-custom-component==0.13.354",
     "ruff",
 ]
 
 [tool.uv]
 default-groups = ["dev"]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
 [tool.ruff]
 target-version = "py314"
 src = ["custom_components/t_smart"]
@@ -96,10 +101,14 @@ ignore = [
   "FBT002",   # Boolean default positional argument in function definition
   "FBT003",   # Boolean positional value in function call
   "PLR2004",  # Magic value used in comparison
-  "CPY001",  # Missing copyright notice at top of file
+  "CPY001",   # Missing copyright notice at top of file
+  "FBT001",   # Boolean params
   "FIX004",   # Temporary hack
 ]
 
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["TC002", "PLR0913"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25

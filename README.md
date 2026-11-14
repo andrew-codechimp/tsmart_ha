@@ -1,3 +1,4 @@
+<!-- ha-marketplace:exclude-start -->
 # Tesla T-Smart thermostat Home Assistant integration
 
 [![GitHub Release][releases-shield]][releases]
@@ -6,6 +7,7 @@
 [![marketplace][marketplacebadge]][marketplace]
 [![License][license-shield]](LICENSE)
 
+<!-- ha-marketplace:exclude-end -->
 This integration supports Tesla T-Smart and other branded water heaters made by EUROICC.
 
 The integration provides a climate control with preset modes, current temperature sensor, a binary sensor for the relay, and a restart button.
@@ -28,11 +30,10 @@ _If you want to show your support please_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation
 
 If you are moving from the pdw-mb version you should uninstall it first and remove the repository from Marketplace/HACS to avoid confusion. If you see two then select the one with the description starting with new. 
-
-⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=tsmart_ha&category=Integration)
 
@@ -40,19 +41,16 @@ If you are moving from the pdw-mb version you should uninstall it first and remo
 
 In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T-Smart Thermostat".
 
-## Discover thermostats
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=t_smart)
 
-After restarting Home Assistant:
+<!-- ha-marketplace:exclude-end -->
+## Adding thermostats
 
-- Go to Settings -> Devices & services -> Add Integration.
+⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
-- Find "T-Smart Thermostat" and click on it.
+When adding a new T-Smart Thermostat the intgration will attempt to discover new thermostats on your network, or prompt for an IP address if none are found.
 
-- Click "OK" and any thermostats on the same network should be discovered, or you can manually enter their IP address if not found.  
-
-- If your change the IP address of your thermostat the integration will try to rediscover it automatically at restart. If your thermostat is on a different network you will have to modify this in the integration by going into settings/configure.
-
-- By default the integration takes the high thermostat reading to match the display and app. This can be changed by going into settings, configuring the thermostat and choosing a different temperature mode.
+By default the integration takes the high thermostat reading to match the display and app. This can be changed by going into settings, configuring the thermostat and choosing a different temperature mode.
 
 ## Screenshots
 
