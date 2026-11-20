@@ -48,7 +48,7 @@ In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "T
 
 ⚠️ If your T-Smart thermostat is on a different network (VLAN) you must have a static IP address. It is recommended to have it static if possible anyway to avoid having to restart the integration when it changes.
 
-When adding a new T-Smart Thermostat the intgration will attempt to discover new thermostats on your network, or prompt for an IP address if none are found.
+When adding a new T-Smart Thermostat the integration will attempt to discover new thermostats on your network, or prompt for an IP address if none are found.
 
 By default the integration takes the high thermostat reading to match the display and app. This can be changed by going into settings, configuring the thermostat and choosing a different temperature mode.
 
