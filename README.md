@@ -35,7 +35,7 @@ _If you want to show your support please_
 
 If you are moving from the pdw-mb version you should uninstall it first and remove the repository from Marketplace/HACS to avoid confusion. If you see two then select the one with the description starting with new. 
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=tsmart_ha&category=Integration)
+[![Open your Home Assistant instance and open a repository in the Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=tsmart_ha&category=Integration)
 
 **Restart Home Assistant if using HACS**
 
